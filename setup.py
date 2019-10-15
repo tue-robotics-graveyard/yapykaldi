@@ -10,6 +10,21 @@ def _generate_ext():
     _ext_modules = []
     _cmdclass = {}
 
+    ext_root = os.path.join('src', PACKAGE, 'csrc')
+    ext_src = os.path.join(ext_root, 'src')
+    ext_include = os.path.join(ext_root, 'include')
+
+    sources = ['gmm_wrappers.cpp']
+    sources = [os.path.join(ext_src, f) for f in sources]
+
+    sources = [os.path.join(ext_root, 'python_extensions.cpp')] + sources
+
+    _ext_modules = [
+        Extension(PACKAGE + '._Extensions',
+                  sources,
+                  include_dirs=[ext_include])
+    ]
+
     return _ext_modules, _cmdclass
 
 
