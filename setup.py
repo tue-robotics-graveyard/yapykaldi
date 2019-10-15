@@ -10,14 +10,15 @@ with open('README.md', 'r') as f:
 setup(
     name='yapykaldi',
     version='0.0.1',
-    description='Python interface to Kaldi Speech Recognition Toolkit',
+    description='Yet Another Python interface to Kaldi Speech Recognition Toolkit',
     long_description=long_description,
     author='Arpit Aggarwal',
     author_email='ar13pit@gmail.com',
     maintainer='Arpit Aggarwal',
     maintainer_email='ar13pit@gmail.com',
-    url='https://github.com/ar13pit/yapykaldi',
-    packages=['kaldi'],
+    url='https://github.com/tue-robotics/yapykaldi',
+    packages=['yapykaldi'],
+    package_dir={'': 'src'},
     cmdclass=cmdclass,
     ext_modules=ext_modules,
     classifiers=[
@@ -33,7 +34,7 @@ setup(
         'Topic :: Multimedia :: Sound/Audio :: Speech'
     ],
     license='MIT',
-    keywords='kaldi asr',
+    keywords='python kaldi asr',
     include_package_data=True,
     install_requires=[
         'numpy',
