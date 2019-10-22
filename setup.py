@@ -1,9 +1,30 @@
 from __future__ import print_function
+import sys
 import os
 from setuptools import setup, Extension
 
 VERSION = "0.0.1"
 PACKAGE = "yapykaldi"
+
+d_setup = {
+    'author': 'Arpit Aggarwal',
+    'author_email': 'ar13pit@gmail.com',
+    'description': 'Yet Another Python interface to Kaldi Speech Recognition Toolkit',
+    'license': 'MIT',
+    'maintainer': 'Arpit Aggarwal',
+    'maintainer_email': 'ar13pit@gmail.com',
+    'name': PACKAGE,
+    'url': 'https://github.com/tue-robotics/yapykaldi',
+    'version': VERSION
+}
+
+try:
+    from catkin_pkg.python_setup import generate_distutils_setup
+    d = generate_distutils_setup()
+    if d != d_setup:
+        sys.exit("Catkin package error! Please ensure package.xml and this setup script have the same metadata.")
+except Exception:
+    d = d_setup
 
 
 def _generate_ext():
@@ -50,15 +71,7 @@ if __name__ == "__main__":
     ext_modules, cmdclass = _generate_ext()
 
     setup(
-        name=PACKAGE,
-        version='0.0.1',
-        description='Yet Another Python interface to Kaldi Speech Recognition Toolkit',
         long_description=long_description,
-        author='Arpit Aggarwal',
-        author_email='ar13pit@gmail.com',
-        maintainer='Arpit Aggarwal',
-        maintainer_email='ar13pit@gmail.com',
-        url='https://github.com/tue-robotics/yapykaldi',
         packages=[PACKAGE],
         package_dir={'': 'src'},
         cmdclass=cmdclass,
@@ -75,11 +88,11 @@ if __name__ == "__main__":
             'Topic :: Software Development :: Libraries :: Python Modules',
             'Topic :: Multimedia :: Sound/Audio :: Speech'
         ],
-        license='MIT',
         keywords='python kaldi asr',
         include_package_data=True,
         install_requires=[
             'numpy',
             'pybind11',
         ],
+        **d
     )
