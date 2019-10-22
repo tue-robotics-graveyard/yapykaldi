@@ -1,6 +1,8 @@
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 import sys
 import os
+import subprocess
+import numpy
 from setuptools import setup, Extension
 
 VERSION = "0.0.1"
@@ -25,6 +27,64 @@ try:
         sys.exit("Catkin package error! Please ensure package.xml and this setup script have the same metadata.")
 except Exception:
     d = d_setup
+
+
+def _getstatusoutput(command):
+    process = subprocess.Popen(command, stdout=subprocess.PIPE)
+    out, _ = process.communicate()
+    return process.returncode, out
+
+
+def find_dependencies():
+    default_libdirs = ['/usr/lib', '/usr/lib/x86_64-linux-gnu', '/usr/lib/i386-linux-gnu']
+    default_includedirs = ['/usr/include', '/usr/include/x86_64-linux-gnu', '/usr/include/i386-linux-gnu']
+    kw = {}
+
+    flag_map = {'-I': 'include_dirs', '-L': 'library_dirs', '-l': 'libraries'}
+
+    print("Looking for atlas library, trying pkg-config first...")
+
+    status, output = _getstatusoutput(
+        ["pkg-config", "--libs", "--cflags", "blas-atlas"])
+
+    if status:
+        print("looking for atlas library, trying hard-coded paths...")
+        found = False
+        for libdir, includedir in zip(default_libdirs, default_includedirs):
+            if os.path.isfile('{}/libatlas.so'.format(libdir)) and os.path.isdir('{}/atlas'.format(includedir)):
+                found = True
+                break
+
+        if not found:
+            raise Exception('Failed to find libatlas.so and includes on your system.')
+
+        kw.setdefault('libraries', []).append('{}/libatlas.so'.format(libdir))
+        kw.setdefault('libraries', []).append('{}/libcblas.so'.format(libdir))
+        kw.setdefault('libraries', []).append('{}/libf77blas.so'.format(libdir))
+        kw.setdefault('libraries', []).append('{}/liblapack_atlas.so'.format(libdir))
+        kw.setdefault('include_dirs', []).append('{}/atlas'.format(includedir))
+        print("looking for atlas library, found it.")
+    else:
+        print("looking for atlas library, pkg-config found it")
+        for token in output.split():
+            token = token.decode('utf8')
+            kw.setdefault(flag_map.get(token[:2]), []).append(token[2:])
+
+    #
+    # pkgconfig: kaldi-asr
+    #
+
+    status, output = _getstatusoutput(
+        ["pkg-config", "--libs", "--cflags", "kaldi-asr"])
+
+    if status:
+        raise Exception("*** failed to find pkgconfig for kaldi-asr")
+
+    for token in output.split():
+        token = token.decode('utf8')
+        kw.setdefault(flag_map.get(token[:2]), []).append(token[2:])
+
+    return kw
 
 
 def _generate_ext():
