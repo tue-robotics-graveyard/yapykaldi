@@ -2,7 +2,6 @@ from __future__ import print_function, unicode_literals
 import sys
 import os
 import subprocess
-import numpy
 from setuptools import setup, Extension
 
 VERSION = "0.0.1"
@@ -35,20 +34,37 @@ def _getstatusoutput(command):
     return process.returncode, out
 
 
-def find_dependencies():
+def _pkgconfig(package, kw=None):
+    if not kw:
+        kw = {}
+
+    flag_map = {'-I': 'include_dirs', '-L': 'library_dirs', '-l': 'libraries'}
+
+    print("Looking for {} library using pkg-config".format(package))
+    status, output = _getstatusoutput(["pkg-config", "--libs", "--cflags", package])
+
+    if status:
+        raise Exception("Failed to find '{}' using pkg-config".format(package))
+
+    for token in output.split():
+        if token[:2] == "-L" and token[2:6] != "/usr":
+            kw.setdefault("runtime_library_dirs", []).append(token[2:])
+
+        kw.setdefault(flag_map.get(token[:2]), []).append(token[2:])
+
+    print("Found {} library.".format(package))
+    return kw
+
+
+def _find_dependencies():
     default_libdirs = ['/usr/lib', '/usr/lib/x86_64-linux-gnu', '/usr/lib/i386-linux-gnu']
     default_includedirs = ['/usr/include', '/usr/include/x86_64-linux-gnu', '/usr/include/i386-linux-gnu']
     kw = {}
 
-    flag_map = {'-I': 'include_dirs', '-L': 'library_dirs', '-l': 'libraries'}
-
-    print("Looking for atlas library, trying pkg-config first...")
-
-    status, output = _getstatusoutput(
-        ["pkg-config", "--libs", "--cflags", "blas-atlas"])
-
-    if status:
-        print("looking for atlas library, trying hard-coded paths...")
+    try:
+        kw = _pkgconfig("atlas", kw)
+    except Exception:
+        print("Looking for atlas library at common system paths...")
         found = False
         for libdir, includedir in zip(default_libdirs, default_includedirs):
             if os.path.isfile('{}/libatlas.so'.format(libdir)) and os.path.isdir('{}/atlas'.format(includedir)):
@@ -63,26 +79,9 @@ def find_dependencies():
         kw.setdefault('libraries', []).append('{}/libf77blas.so'.format(libdir))
         kw.setdefault('libraries', []).append('{}/liblapack_atlas.so'.format(libdir))
         kw.setdefault('include_dirs', []).append('{}/atlas'.format(includedir))
-        print("looking for atlas library, found it.")
-    else:
-        print("looking for atlas library, pkg-config found it")
-        for token in output.split():
-            token = token.decode('utf8')
-            kw.setdefault(flag_map.get(token[:2]), []).append(token[2:])
+        print("Found atlas library.")
 
-    #
-    # pkgconfig: kaldi-asr
-    #
-
-    status, output = _getstatusoutput(
-        ["pkg-config", "--libs", "--cflags", "kaldi-asr"])
-
-    if status:
-        raise Exception("*** failed to find pkgconfig for kaldi-asr")
-
-    for token in output.split():
-        token = token.decode('utf8')
-        kw.setdefault(flag_map.get(token[:2]), []).append(token[2:])
+    kw = _pkgconfig("kaldi-asr", kw)
 
     return kw
 
@@ -100,10 +99,21 @@ def _generate_ext():
 
     sources = [os.path.join(ext_root, 'python_extensions.cpp')] + sources
 
+    ext_dependencies = _find_dependencies()
+    ext_dependencies.setdefault('include_dirs', []).append(ext_include)
+
     _ext_modules = [
         Extension(PACKAGE + '._Extensions',
                   sources,
-                  include_dirs=[ext_include])
+                  language="c++",
+                  extra_compile_args=[
+                      '-Wall', '-pthread', '-std=c++11',
+                      '-DKALDI_DOUBLEPRECISION=0', '-Wno-sign-compare',
+                      '-Wno-unused-local-typedefs', '-Winit-self',
+                      '-DHAVE_EXECINFO_H=1', '-DHAVE_CXXABI_H', '-DHAVE_ATLAS',
+                      '-g'
+                  ],
+                  **ext_dependencies)
     ]
 
     return _ext_modules, _cmdclass
