@@ -1,8 +1,15 @@
 from __future__ import print_function, unicode_literals
+from builtins import *
 import sys
 import os
 import subprocess
+from types import StringType
 from setuptools import setup, Extension
+
+try:
+    from Cython.Distutils import build_ext
+except ImportError:
+    raise Exception("cython is needed to build this extension.")
 
 VERSION = "0.0.1"
 PACKAGE = "yapykaldi"
@@ -89,12 +96,14 @@ def _find_dependencies():
 def _generate_ext():
     _ext_modules = []
     _cmdclass = {}
+    _cmdclass.update({'build_ext': build_ext})
 
     ext_root = os.path.join('src', PACKAGE, 'csrc')
     ext_src = os.path.join(ext_root, 'src')
     ext_include = os.path.join(ext_root, 'include')
 
     sources = ['gmm_wrappers.cpp']
+
     sources = [os.path.join(ext_src, f) for f in sources]
 
     sources = [os.path.join(ext_root, 'python_extensions.cpp')] + sources
@@ -102,8 +111,10 @@ def _generate_ext():
     ext_dependencies = _find_dependencies()
     ext_dependencies.setdefault('include_dirs', []).append(ext_include)
 
+    ext_name = str(PACKAGE + "._Extensions")
+
     _ext_modules = [
-        Extension(PACKAGE + '._Extensions',
+        Extension(ext_name,
                   sources,
                   language="c++",
                   extra_compile_args=[
