@@ -10,5 +10,6 @@ PYBIND11_MODULE(yapykaldi, m)
       .def(py::init<float, int, int, float, std::string&, std::string&, std::string&,
                     std::string&>());
 
-  py::class_<kaldi::GmmOnlineDecodeWrapper>(m, "GmmOnlineDecodeWrapper").def(py::init<>);
+  py::class_<kaldi::GmmOnlineDecodeWrapper>(m, "GmmOnlineDecodeWrapper")
+      .def(py::init<kaldi::GmmOnlineModelWrapper *>());
 }
