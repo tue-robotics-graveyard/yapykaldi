@@ -18,6 +18,16 @@ class KaldiGmmOnlineModel(object):
         fst_in_str = "{}/graph/HCLG.fst".format(self.graph_dir)
         align_lex_filename = "{}/graph/phones/align_lexicon.int".format(self.graph_dir)
 
+        # Check all files exist
+        for fname in [config, word_symbol_table, fst_in_str, align_lex_filename]:
+            if not os.path.isfile(fname):
+                raise Exception("{} not found".format(fname))
+            if not os.access(fname. os.R_OK):
+                raise Exception("{} is not readable".format(fname))
+
+        # Generate config files
+
+
         self.model_wrapper = GmmOnlineModelWrapper(beam, max_active, min_active, lattice_beam, word_symbol_table, fst_in_str, self.conf_file, align_lex_filename)
 
 
