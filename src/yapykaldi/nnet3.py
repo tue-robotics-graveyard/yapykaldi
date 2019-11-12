@@ -4,6 +4,9 @@ import struct
 import wave
 import os
 
+
+__all__ = ["KaldiNNet3OnlineModel", "KaldiNNet3OnlineDecoder"]
+
 class KaldiNNet3OnlineModel(object):
     def __init__(self, model_dir, model='model', beam=7.0, max_active=7000, min_active=200, lattice_beam=8.0,
             acoustic_scale=1.0, frame_subsampling_factor=3, num_gselect=5, min_post=0.025, posterior_scale=0.1,
