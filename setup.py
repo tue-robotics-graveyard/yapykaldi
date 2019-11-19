@@ -7,9 +7,10 @@ from types import StringType
 from setuptools import setup, Extension
 
 try:
-    from Cython.Distutils import build_ext
+    import pybind11
 except ImportError:
-    raise Exception("cython is needed to build this extension.")
+    raise Exception("pybind11 is needed to build this library")
+
 
 VERSION = "0.0.1"
 PACKAGE = "yapykaldi"
@@ -32,6 +33,7 @@ try:
     if d != d_setup:
         sys.exit("Catkin package error! Please ensure package.xml and this setup script have the same metadata.")
 except Exception:
+    # The exception is valid in case setup.py is not invoked by catkin
     d = d_setup
 
 
@@ -110,6 +112,8 @@ def _generate_ext():
 
     ext_dependencies = _find_dependencies()
     ext_dependencies.setdefault('include_dirs', []).append(ext_include)
+    ext_dependencies.setdefault('include_dirs', []).append(pybind11.get_include())
+    ext_dependencies.setdefault('include_dirs', []).append(pybind11.get_include(True))
 
     ext_name = str(PACKAGE + "._Extensions")
 
