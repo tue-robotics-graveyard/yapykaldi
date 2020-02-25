@@ -1,16 +1,18 @@
-from ._Extensions import NNet3OnlineModelWrapper, NNet3OnlineDecoderWrapper
-import numpy as np
+import os
 import struct
 import wave
-import os
+from tempfile import NamedTemporaryFile
+import numpy as np
+from ._Extensions import NNet3OnlineModelWrapper, NNet3OnlineDecoderWrapper
 
 
 __all__ = ["KaldiNNet3OnlineModel", "KaldiNNet3OnlineDecoder"]
 
+
 class KaldiNNet3OnlineModel(object):
     def __init__(self, model_dir, model='model', beam=7.0, max_active=7000, min_active=200, lattice_beam=8.0,
-            acoustic_scale=1.0, frame_subsampling_factor=3, num_gselect=5, min_post=0.025, posterior_scale=0.1,
-            max_count=0, online_ivector_period=10):
+                 acoustic_scale=1.0, frame_subsampling_factor=3, num_gselect=5, min_post=0.025, posterior_scale=0.1,
+                 max_count=0, online_ivector_period=10):
 
         self.model_dir = model_dir
         self.model = model
@@ -23,17 +25,29 @@ class KaldiNNet3OnlineModel(object):
         align_lex_filename = "{}/{}/graph/phones/align_lexicon.int".format(self.model_dir, self.model)
 
         for fname in [mfcc_config, word_symbol_table, model_in_filename, splice_conf_filename, fst_in_str,
-                align_lex_filename]:
+                      align_lex_filename]:
             if not os.path.isfile(fname):
                 raise Exception("{} not found".format(fname))
             if not os.access(fname, os.R_OK):
                 raise Exception("{} is not readable".format(fname))
 
-        # self.ie_conf_f =
+        self.ie_conf_f = NamedTemporaryFile(prefix='ivector_extractor_', suffix='.conf', delete=True)
+        self.ie_conf_f.write("--cmvn-config={}/conf/online_cmvn.conf\n".format(self.model_dir))
+        self.ie_conf_f.write("--ivector-period={}\n".format(online_ivector_period))
+        self.ie_conf_f.write("--splice-config={}\n".format(splice_conf_filename))
+        self.ie_conf_f.write("--lda-matrix={}/extractor/final.mat\n".format(self.modeldir))
+        self.ie_conf_f.write("--global-cmvn-stats={}/extractor/global_cmvn.stats\n".format(self.modeldir))
+        self.ie_conf_f.write("--diag-ubm={}/extractor/final.dubm\n".format(self.modeldir))
+        self.ie_conf_f.write("--ivector-extractor={}/extractor/final.ie\n".format(self.modeldir))
+        self.ie_conf_f.write("--num-gselect={}\n".format(num_gselect))
+        self.ie_conf_f.write("--min-post={}\n".format(min_post))
+        self.ie_conf_f.write("--posterior-scale={}\n".format(posterior_scale))
+        self.ie_conf_f.write("--max-remembered-frames=1000\n")
+        self.ie_conf_f.write("--max-count={}\n".format(max_count))
+        self.ie_conf_f.flush()
 
-        self.model_wrapper = NNet3OnlineModelWrapper(beam, max_active, min_active, lattice_beam, acoustic_scale,
-                frame_subsampling_factor, word_symbol_table, model_in_filename, fst_in_str, mfcc_config, self.ie_conf_f,
-                align_lex_filename)
+        self.model_wrapper = NNet3OnlineModelWrapper(beam, max_active, min_active, lattice_beam, acoustic_scale, frame_subsampling_factor,
+                                                     word_symbol_table, model_in_filename, fst_in_str, mfcc_config, self.ie_conf_f, align_lex_filename)
 
 
 class KaldiNNet3OnlineDecoder(object):
