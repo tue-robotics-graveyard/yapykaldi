@@ -1,9 +1,6 @@
-from __future__ import print_function, unicode_literals
-from builtins import *
 import sys
 import os
 import subprocess
-from types import StringType
 from setuptools import setup, Extension
 
 try:
@@ -14,27 +11,6 @@ except ImportError:
 
 VERSION = "0.0.1"
 PACKAGE = "yapykaldi"
-
-d_setup = {
-    'author': 'Arpit Aggarwal',
-    'author_email': 'ar13pit@gmail.com',
-    'description': 'Yet Another Python interface to Kaldi Speech Recognition Toolkit',
-    'license': 'MIT',
-    'maintainer': 'Arpit Aggarwal',
-    'maintainer_email': 'ar13pit@gmail.com',
-    'name': PACKAGE,
-    'url': 'https://github.com/tue-robotics/yapykaldi',
-    'version': VERSION
-}
-
-try:
-    from catkin_pkg.python_setup import generate_distutils_setup
-    d = generate_distutils_setup()
-    if d != d_setup:
-        sys.exit("Catkin package error! Please ensure package.xml and this setup script have the same metadata.")
-except Exception:
-    # The exception is valid in case setup.py is not invoked by catkin
-    d = d_setup
 
 
 def _getstatusoutput(command):
@@ -104,7 +80,8 @@ def _generate_ext():
     ext_src = os.path.join(ext_root, 'src')
     ext_include = os.path.join(ext_root, 'include')
 
-    sources = ['gmm_wrappers.cpp']
+    sources = ['gmm_wrappers.cpp',
+               'nnet3_wrappers.cpp']
 
     sources = [os.path.join(ext_src, f) for f in sources]
 
@@ -135,49 +112,56 @@ def _generate_ext():
 
 
 def _create_version_file(vfdir):
-    print('-- Building version ' + VERSION)
-
     vfpath = os.path.join(vfdir, 'version.py')
     with open(vfpath, 'w') as vfh:
         vfh.write("__version__ = '{}'\n".format(VERSION))
 
 
-if __name__ == "__main__":
-    # Create version files
-    cwd = os.path.dirname(os.path.abspath(__file__))
-    version_file_dir = os.path.join(cwd, 'src', PACKAGE)
-    _create_version_file(version_file_dir)
+# Create version files
+cwd = os.path.dirname(os.path.abspath(__file__))
+version_file_dir = os.path.join(cwd, 'src', PACKAGE)
+_create_version_file(version_file_dir)
 
-    # Get long description
-    with open('README.md', 'r') as f:
-        long_description = f.read()
+# Get long description
+with open('README.md', 'r') as f:
+    long_description = f.read()
 
-    # Get extension module configurations and build commands
-    ext_modules, cmdclass = _generate_ext()
+# Get extension module configurations and build commands
+ext_modules, cmdclass = _generate_ext()
 
-    setup(
-        long_description=long_description,
-        packages=[PACKAGE],
-        package_dir={'': 'src'},
-        cmdclass=cmdclass,
-        ext_modules=ext_modules,
-        classifiers=[
-            'Operating System :: POSIX :: Linux',
-            'License :: OSI Approved :: MIT License',
-            'Programming Language :: Python :: 2',
-            'Programming Language :: Python :: 2.7',
-            'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.6',
-            'Programming Language :: C++',
-            'Intended Audience :: Developers',
-            'Topic :: Software Development :: Libraries :: Python Modules',
-            'Topic :: Multimedia :: Sound/Audio :: Speech'
-        ],
-        keywords='python kaldi asr',
-        include_package_data=True,
-        install_requires=[
-            'numpy',
-            'pybind11',
-        ],
-        **d
-    )
+setup(
+    name=PACKAGE,
+    version=VERSION,
+    packages=[PACKAGE],
+    package_dir={'': 'src'},
+    install_requires=[
+        'numpy',
+        'pybind11',
+        'setuptools',
+    ],
+    zip_safe=True,
+    author='Arpit Aggarwal',
+    author_email='ar13pit@gmail.com',
+    maintainer='Arpit Aggarwal',
+    maintainer_email='ar13pit@gmail.com',
+    url='https://github.com/tue-robotics/yapykaldi',
+    description='Yet Another Python interface to Kaldi Speech Recognition Toolkit',
+    long_description=long_description,
+    license='MIT',
+    cmdclass=cmdclass,
+    ext_modules=ext_modules,
+    classifiers=[
+        'Operating System :: POSIX :: Linux',
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: C++',
+        'Intended Audience :: Developers',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+        'Topic :: Multimedia :: Sound/Audio :: Speech'
+    ],
+    keywords='python kaldi asr',
+    include_package_data=True,
+)
