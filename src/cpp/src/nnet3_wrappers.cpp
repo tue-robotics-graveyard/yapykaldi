@@ -304,7 +304,7 @@ bool NNet3OnlineDecoderWrapper::decode(BaseFloat samp_freq, int32 num_frames, Ba
 
 // typedef void (*LogHandler)(const LogMessageEnvelope &envelope,
 //                            const char *message);
-void silent_log_handler(const LogMessageEnvelope &envelope, const char *message)
+static void silent_log_handler(const LogMessageEnvelope &envelope, const char *message)
 {
   // nothing - this handler simply keeps silent
 }
