@@ -1,82 +1,35 @@
 import sys
 import os
-import subprocess
-from setuptools import setup, Extension
+from setuptools import setup, Extension, find_packages
 
 try:
     import pybind11
 except ImportError:
     raise Exception("pybind11 is needed to build this library")
 
+try:
+    import pkgconfig
+except ImportError:
+    raise Exception("pkgconfig is needed to build this library. Install with `pip install pkgconfig`.")
+
 
 VERSION = "0.0.1"
 PACKAGE = "yapykaldi"
+PACKAGE_DIR = os.path.join('src', 'python')
 
 
-def _getstatusoutput(command):
-    process = subprocess.Popen(command, stdout=subprocess.PIPE)
-    out, _ = process.communicate()
-    return process.returncode, out
+def _find_dependencies(pkg):
+    result_dict = pkgconfig.parse(pkg)
+    result_dict['runtime_library_dirs'] = result_dict['library_dirs']
+    return result_dict
 
 
-def _pkgconfig(package, kw=None):
-    if not kw:
-        kw = {}
-
-    flag_map = {'-I': 'include_dirs', '-L': 'library_dirs', '-l': 'libraries'}
-
-    print("Looking for {} library using pkg-config".format(package))
-    status, output = _getstatusoutput(["pkg-config", "--libs", "--cflags", package])
-
-    if status:
-        raise Exception("Failed to find '{}' using pkg-config".format(package))
-
-    for token in output.split():
-        if token[:2] == "-L" and token[2:6] != "/usr":
-            kw.setdefault("runtime_library_dirs", []).append(token[2:])
-
-        kw.setdefault(flag_map.get(token[:2]), []).append(token[2:])
-
-    print("Found {} library.".format(package))
-    return kw
-
-
-def _find_dependencies():
-    default_libdirs = ['/usr/lib', '/usr/lib/x86_64-linux-gnu', '/usr/lib/i386-linux-gnu']
-    default_includedirs = ['/usr/include', '/usr/include/x86_64-linux-gnu', '/usr/include/i386-linux-gnu']
-    kw = {}
-
-    try:
-        kw = _pkgconfig("atlas", kw)
-    except Exception:
-        print("Looking for atlas library at common system paths...")
-        found = False
-        for libdir, includedir in zip(default_libdirs, default_includedirs):
-            if os.path.isfile('{}/libatlas.so'.format(libdir)) and os.path.isdir('{}/atlas'.format(includedir)):
-                found = True
-                break
-
-        if not found:
-            raise Exception('Failed to find libatlas.so and includes on your system.')
-
-        kw.setdefault('libraries', []).append('{}/libatlas.so'.format(libdir))
-        kw.setdefault('libraries', []).append('{}/libcblas.so'.format(libdir))
-        kw.setdefault('libraries', []).append('{}/libf77blas.so'.format(libdir))
-        kw.setdefault('libraries', []).append('{}/liblapack_atlas.so'.format(libdir))
-        kw.setdefault('include_dirs', []).append('{}/atlas'.format(includedir))
-        print("Found atlas library.")
-
-    kw = _pkgconfig("kaldi-asr", kw)
-
-    return kw
-
-
-def _generate_ext():
+def _generate_ext(ext_pkgs):
     _ext_modules = []
     _cmdclass = {}
     _cmdclass.update({'build_ext': build_ext})
 
-    ext_root = os.path.join('src', PACKAGE, 'csrc')
+    ext_root = os.path.join('src', 'cpp')
     ext_src = os.path.join(ext_root, 'src')
     ext_include = os.path.join(ext_root, 'include')
 
@@ -87,12 +40,13 @@ def _generate_ext():
 
     sources = [os.path.join(ext_root, 'python_extensions.cpp')] + sources
 
-    ext_dependencies = _find_dependencies()
+    ext_dependencies = _find_dependencies(pkg=ext_pkgs)
+
     ext_dependencies.setdefault('include_dirs', []).append(ext_include)
     ext_dependencies.setdefault('include_dirs', []).append(pybind11.get_include())
     ext_dependencies.setdefault('include_dirs', []).append(pybind11.get_include(True))
 
-    ext_name = str(PACKAGE + "._Extensions")
+    ext_name = "{}._Extensions".format(PACKAGE)
 
     _ext_modules = [
         Extension(ext_name,
@@ -119,7 +73,7 @@ def _create_version_file(vfdir):
 
 # Create version files
 cwd = os.path.dirname(os.path.abspath(__file__))
-version_file_dir = os.path.join(cwd, 'src', PACKAGE)
+version_file_dir = os.path.join(cwd, PACKAGE_DIR, PACKAGE)
 _create_version_file(version_file_dir)
 
 # Get long description
@@ -127,13 +81,13 @@ with open('README.md', 'r') as f:
     long_description = f.read()
 
 # Get extension module configurations and build commands
-ext_modules, cmdclass = _generate_ext()
+ext_modules, cmdclass = _generate_ext(ext_pkgs='kaldi')
 
 setup(
     name=PACKAGE,
     version=VERSION,
-    packages=[PACKAGE],
-    package_dir={'': 'src'},
+    packages=find_packages(PACKAGE_DIR),
+    package_dir={'': PACKAGE_DIR},
     install_requires=[
         'numpy',
         'pybind11',
