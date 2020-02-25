@@ -5,7 +5,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(yapykaldi, m)
+PYBIND11_MODULE(_Extensions, m)
 {
   // gmm_wrappers
   py::class_<kaldi::GmmOnlineModelWrapper>(m, "GmmOnlineModelWrapper")
@@ -24,7 +24,7 @@ PYBIND11_MODULE(yapykaldi, m)
                     std::string &, std::string &, std::string &>());
 
   py::class_<kaldi::NNet3OnlineDecoderWrapper>(m, "NNet3OnlineDecoderWrapper")
-      .def(py::init<kaldi::NNet3OnlineDecoderWrapper *>())
+      .def(py::init<kaldi::NNet3OnlineModelWrapper *>())
       .def("decode", &kaldi::NNet3OnlineDecoderWrapper::decode)
       .def("get_decoded_string", &kaldi::NNet3OnlineDecoderWrapper::get_decoded_string)
       .def("get_word_alignment", &kaldi::NNet3OnlineDecoderWrapper::get_word_alignment);
