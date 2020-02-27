@@ -31,7 +31,7 @@ class KaldiNNet3OnlineModel(object):
             if not os.access(fname, os.R_OK):
                 raise Exception("{} is not readable".format(fname))
 
-        self.ie_conf_f = NamedTemporaryFile(prefix='ivector_extractor_', suffix='.conf', delete=True)
+        self.ie_conf_f = NamedTemporaryFile(prefix='ivector_extractor_', suffix='.conf', delete=True, mode="w")
         self.ie_conf_f.write("--cmvn-config={}/conf/online_cmvn.conf\n".format(self.model_dir))
         self.ie_conf_f.write("--ivector-period={}\n".format(online_ivector_period))
         self.ie_conf_f.write("--splice-config={}\n".format(splice_conf_filename))
