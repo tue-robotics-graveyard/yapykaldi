@@ -35,10 +35,10 @@ class KaldiNNet3OnlineModel(object):
         self.ie_conf_f.write("--cmvn-config={}/conf/online_cmvn.conf\n".format(self.model_dir))
         self.ie_conf_f.write("--ivector-period={}\n".format(online_ivector_period))
         self.ie_conf_f.write("--splice-config={}\n".format(splice_conf_filename))
-        self.ie_conf_f.write("--lda-matrix={}/extractor/final.mat\n".format(self.modeldir))
-        self.ie_conf_f.write("--global-cmvn-stats={}/extractor/global_cmvn.stats\n".format(self.modeldir))
-        self.ie_conf_f.write("--diag-ubm={}/extractor/final.dubm\n".format(self.modeldir))
-        self.ie_conf_f.write("--ivector-extractor={}/extractor/final.ie\n".format(self.modeldir))
+        self.ie_conf_f.write("--lda-matrix={}/extractor/final.mat\n".format(self.model_dir))
+        self.ie_conf_f.write("--global-cmvn-stats={}/extractor/global_cmvn.stats\n".format(self.model_dir))
+        self.ie_conf_f.write("--diag-ubm={}/extractor/final.dubm\n".format(self.model_dir))
+        self.ie_conf_f.write("--ivector-extractor={}/extractor/final.ie\n".format(self.model_dir))
         self.ie_conf_f.write("--num-gselect={}\n".format(num_gselect))
         self.ie_conf_f.write("--min-post={}\n".format(min_post))
         self.ie_conf_f.write("--posterior-scale={}\n".format(posterior_scale))
@@ -47,7 +47,8 @@ class KaldiNNet3OnlineModel(object):
         self.ie_conf_f.flush()
 
         self.model_wrapper = NNet3OnlineModelWrapper(beam, max_active, min_active, lattice_beam, acoustic_scale, frame_subsampling_factor,
-                                                     word_symbol_table, model_in_filename, fst_in_str, mfcc_config, self.ie_conf_f, align_lex_filename)
+                                                     word_symbol_table, model_in_filename, fst_in_str, mfcc_config,
+                                                     self.ie_conf_f.name, align_lex_filename)
 
 
 class KaldiNNet3OnlineDecoder(object):
