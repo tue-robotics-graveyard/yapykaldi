@@ -71,10 +71,10 @@ class NNet3OnlineModelWrapper
 class NNet3OnlineDecoderWrapper
 {
  public:
-  NNet3OnlineDecoderWrapper(NNet3OnlineModelWrapper *aModel);
+  NNet3OnlineDecoderWrapper(NNet3OnlineModelWrapper* aModel);
   ~NNet3OnlineDecoderWrapper();
 
-  bool decode(BaseFloat samp_freq, int32 num_frames, BaseFloat *frames, bool finalize);
+  bool decode(BaseFloat samp_freq, int32 num_frames, BaseFloat* frames, bool finalize);
 
   void get_decoded_string(std::string &decoded_string, double &likelihood);
   bool get_word_alignment(std::vector<string> &words, std::vector<int32> &times,
