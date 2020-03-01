@@ -1,8 +1,10 @@
-from ._Extensions import GmmOnlineDecoderWrapper, GmmOnlineModelWrapper
 import os
-import numpy as np
 import wave
 import struct
+import re
+from tempfile import NamedTemporaryFile
+import numpy as np
+from ._Extensions import GmmOnlineDecoderWrapper, GmmOnlineModelWrapper
 
 
 __all__ = ["KaldiGmmOnlineModel", "KaldiGmmOnlineDecoder"]
@@ -26,9 +28,25 @@ class KaldiGmmOnlineModel(object):
                 raise Exception("{} is not readable".format(fname))
 
         # Generate config files
+        self.conf_file = NamedTemporaryFile(prefix='py_online_decoding_', suffix='.conf', delete=True)
+        with open(config) as conf_fh:
+            for line in conf_fh:
+                # modify any path, then write
+                line = re.sub(r'=(.*/.*)',
+                              lambda match: '=' + os.path.join(self.model_dir, '..', '..', match.group(1)),
+                              line)
+                self.conf_file.write(line)
+        self.conf_file.flush()
 
+        self.model_wrapper = GmmOnlineModelWrapper(beam, max_active, min_active, lattice_beam, word_symbol_table,
+                                                   fst_in_str, self.conf_file.name, align_lex_filename)
 
-        self.model_wrapper = GmmOnlineModelWrapper(beam, max_active, min_active, lattice_beam, word_symbol_table, fst_in_str, self.conf_file, align_lex_filename)
+    def __del__(self):
+        if self.conf_file:
+            self.conf_file.close()
+
+        if self.model_wrapper:
+            del self.model_wrapper
 
 
 class KaldiGmmOnlineDecoder(object):
@@ -36,6 +54,9 @@ class KaldiGmmOnlineDecoder(object):
         assert isinstance(model, KaldiGmmOnlineModel)
 
         self.decoder_wrapper = GmmOnlineDecoderWrapper(model.model_wrapper)
+
+    def __del__(self):
+        del self.decoder_wrapper
 
     def decode(self, samp_freq, samples, finalize):
         return self.decoder_wrapper.decode(samp_freq, samples.shape[0], samples.data, finalize)
