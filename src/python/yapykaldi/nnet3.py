@@ -50,12 +50,22 @@ class KaldiNNet3OnlineModel(object):
                                                      word_symbol_table, model_in_filename, fst_in_str, mfcc_config,
                                                      self.ie_conf_f.name, align_lex_filename)
 
+    def __del__(self):
+        if self.ie_conf_f:
+            self.ie_conf_f.close()
+
+        if self.model_wrapper:
+            del self.model_wrapper
+
 
 class KaldiNNet3OnlineDecoder(object):
     def __init__(self, model):
         assert isinstance(model, KaldiNNet3OnlineModel)
 
         self.decoder_wrapper = NNet3OnlineDecoderWrapper(model.model_wrapper)
+
+    def __del__(self):
+        del self.decoder_wrapper
 
     def decode(self, samp_freq, samples, finalize):
         return self.decoder_wrapper.decode(samp_freq, samples.shape[0], samples.data, finalize)
