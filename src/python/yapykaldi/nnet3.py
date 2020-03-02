@@ -3,7 +3,7 @@ import struct
 import wave
 from tempfile import NamedTemporaryFile
 import numpy as np
-from ._Extensions import NNet3OnlineModelWrapper, NNet3OnlineDecoderWrapper
+from ._Extensions import NNet3OnlineModelWrapper, NNet3OnlineDecoderWrapper, StringList, IntList
 
 
 __all__ = ["KaldiNNet3OnlineModel", "KaldiNNet3OnlineDecoder"]
@@ -74,9 +74,9 @@ class KaldiNNet3OnlineDecoder(object):
         return self.decoder_wrapper.get_decoded_string(likelihood)
 
     def get_word_alignment(self):
-        words = []
-        times = []
-        lengths = []
+        words = StringList()
+        times = IntList()
+        lengths = IntList()
 
         if not self.decoder_wrapper.get_word_alignment(words, times, lengths):
             return None

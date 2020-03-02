@@ -4,7 +4,7 @@ import struct
 import re
 from tempfile import NamedTemporaryFile
 import numpy as np
-from ._Extensions import GmmOnlineDecoderWrapper, GmmOnlineModelWrapper
+from ._Extensions import GmmOnlineDecoderWrapper, GmmOnlineModelWrapper, StringList, IntList
 
 
 __all__ = ["KaldiGmmOnlineModel", "KaldiGmmOnlineDecoder"]
@@ -65,9 +65,9 @@ class KaldiGmmOnlineDecoder(object):
         return self.decoder_wrapper.get_decoded_string(likelihood)
 
     def get_word_alignment(self):
-        words = []
-        times = []
-        lengths = []
+        words = StringList()
+        times = IntList()
+        lengths = IntList()
 
         if not self.decoder_wrapper.get_word_alignment(words, times, lengths):
             return None
