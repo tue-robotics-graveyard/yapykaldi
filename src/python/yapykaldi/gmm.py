@@ -59,13 +59,10 @@ class KaldiGmmOnlineDecoder(object):
         del self.decoder_wrapper
 
     def decode(self, samp_freq, samples, finalize):
-        return self.decoder_wrapper.decode(samp_freq, samples.shape[0], samples.data, finalize)
+        return self.decoder_wrapper.decode(samp_freq, samples, finalize)
 
     def get_decoded_string(self, likelihood=0.0):
-        decoded_string = ""
-        self.decoder_wrapper.get_decoded_string(decoded_string, likelihood)
-
-        return decoded_string, likelihood
+        return self.decoder_wrapper.get_decoded_string(likelihood)
 
     def get_word_alignment(self):
         words = []
