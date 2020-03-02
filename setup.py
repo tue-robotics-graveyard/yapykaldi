@@ -15,7 +15,7 @@ except ImportError:
     raise Exception("pkgconfig is needed to build this library. Install with `pip install pkgconfig`.")
 
 
-VERSION = "0.0.1"
+VERSION = "0.1.0"
 PACKAGE = "yapykaldi"
 PACKAGE_DIR = os.path.join('src', 'python')
 
@@ -157,6 +157,7 @@ setup(
         'numpy',
         'pybind11',
         'setuptools',
+        'pkgconfig',
     ],
     zip_safe=True,
     author='Arpit Aggarwal',
