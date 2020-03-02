@@ -1,13 +1,20 @@
-#include <stdexcept>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl_bind.h>
+#include <stdexcept>
 #include <string>
 #include "gmm_wrappers.h"
 #include "nnet3_wrappers.h"
 
 namespace py = pybind11;
+using StringList = std::vector<std::string>;
+using IntList = std::vector<int>;
 
 PYBIND11_MODULE(_Extensions, m)
 {
+  // std::vector bindings to python lists
+  py::bind_vector<StringList>(m, "StringList");
+  py::bind_vector<IntList>(m, "IntList");
+
   /*
    * gmm_wrappers
    */
