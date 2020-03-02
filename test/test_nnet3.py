@@ -8,12 +8,16 @@ decoder = KaldiNNet3OnlineDecoder(model)
 
 if decoder.decode_wav_file(wavfile):
     decoded_string, likelihood = decoder.get_decoded_string()
+    words, times, lengths = decoder.get_word_alignment()
 
     print()
     print("*****************************************************************")
     print("**", wavfile)
     print("**", decoded_string)
     print("** {} likelihood:".format(model_dir), likelihood)
+    print("** Word alignment: {}".format(words))
+    print("** Time alignment: {}".format(times))
+    print("** Length alignment: {}".format(lengths))
     print("*****************************************************************")
     print()
 
