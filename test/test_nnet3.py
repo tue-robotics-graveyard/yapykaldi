@@ -50,7 +50,7 @@ try:
         frame_rate = wavf.getframerate()
 
         total_num_frames = wavf.getnframes()
-        total_chunks = math.ceil(total_num_frames/CHUNK)
+        total_chunks = math.floor(total_num_frames/CHUNK)
         finalize = False
 
         for i in range(0, total_chunks):
