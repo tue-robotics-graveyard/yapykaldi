@@ -41,7 +41,6 @@ def listen(q):
     while not FINALIZE:
         data = stream.read(CHUNK)
         q.put(data)
-        #  logging.info("Sending data")
         frames.append(data)
 
     logging.info("* stop listening")
@@ -84,7 +83,7 @@ def recognize(q):
 
 def handle_interrupt(sig, frame):
     global FINALIZE
-    print("Handling interrupt")
+    logging.info("Handling interrupt")
     FINALIZE = True
     time.sleep(3)
 
