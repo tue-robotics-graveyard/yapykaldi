@@ -39,6 +39,11 @@ operating systems (preferably Ubuntu>=18.04).
     pip install .
     ```
 
+### Examples
+1. Test kaldi nnet3 model using [test_nnet3.py](./test/test_nnet3.py)
+2. Test simple audo recording using [test_audio.py](test/test_audio.py)
+3. Test continuous live speech recognition using [test_live.py](test/test_live.py)
+
 ## References
 * [py-kaldi-asr](https://github.com/gooofy/py-kaldi-asr)
 * [zamia-speech](https://github.com/gooofy/zamia-speech)
