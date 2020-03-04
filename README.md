@@ -24,8 +24,17 @@ operating systems (preferably Ubuntu>=18.04).
 * [kaldi-asr](http://kaldi-asr.org)
 
 ### Installation
-```bash
-git clone https://github.com/ar13pit/yapykaldi
-cd yapykaldi
-pip install .
-```
+1. Install kaldi-asr using CMake and add the `pkgconfig` directory to `PKG_CONFIG_PATH` in `~/.bashrc`
+    ```bash
+    if [[ :$PKG_CONFIG_PATH: != *:$KALDI_ROOT/dist/lib/pkgconfig:* ]]
+    then
+        export PKG_CONFIG_PATH=$KALDI_ROOT/dist/lib/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}
+    fi
+    ```
+
+1. Install yapykaldi
+    ```bash
+    git clone https://github.com/ar13pit/yapykaldi
+    cd yapykaldi
+    pip install .
+    ```
