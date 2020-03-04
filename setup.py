@@ -1,18 +1,12 @@
 import sys
 import os
+import tempfile
+from glob import glob
 import setuptools
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
-
-try:
-    import pybind11
-except ImportError:
-    raise Exception("pybind11 is needed to build this library")
-
-try:
-    import pkgconfig
-except ImportError:
-    raise Exception("pkgconfig is needed to build this library. Install with `pip install pkgconfig`.")
+import pybind11
+import pkgconfig
 
 
 VERSION = "0.1.0"
@@ -26,7 +20,6 @@ def _has_flag(compiler, flagname):
     """Return a boolean indicating whether a flag name is supported on
     the specified compiler.
     """
-    import tempfile
     with tempfile.NamedTemporaryFile('w', suffix='.cpp') as f:
         f.write('int main (int argc, char **argv) { return 0; }')
         try:
@@ -44,7 +37,8 @@ def _cpp_flag(compiler):
     flags = ['-std=c++17', '-std=c++14', '-std=c++11']
 
     for flag in flags:
-        if has_flag(compiler, flag): return flag
+        if _has_flag(compiler, flag):
+            return flag
 
     raise RuntimeError('Unsupported compiler -- at least C++11 support '
                        'is needed!')
@@ -98,11 +92,8 @@ def _generate_ext(ext_pkgs):
     ext_src = os.path.join(ext_root, 'src')
     ext_include = os.path.join(ext_root, 'include')
 
-    sources = ['gmm_wrappers.cpp',
-               'nnet3_wrappers.cpp']
-
-    sources = [os.path.join(ext_src, f) for f in sources]
-
+    # Get all .cpp source files
+    sources = glob(os.path.join(ext_src, '*'))
     sources = [os.path.join(ext_root, 'python_extensions.cpp')] + sources
 
     ext_dependencies = _find_dependencies(pkg=ext_pkgs)
