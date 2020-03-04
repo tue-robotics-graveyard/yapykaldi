@@ -19,6 +19,8 @@ operating systems (preferably Ubuntu>=18.04).
 * Python 2.7 or 3.6
 * numpy
 * pybind11
+* pkgconfig
+* pyaudio
 * [kaldi-asr](http://kaldi-asr.org)
 
 ### Installation
