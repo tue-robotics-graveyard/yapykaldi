@@ -38,3 +38,7 @@ operating systems (preferably Ubuntu>=18.04).
     cd yapykaldi
     pip install .
     ```
+
+## References
+* [py-kaldi-asr](https://github.com/gooofy/py-kaldi-asr)
+* [zamia-speech](https://github.com/gooofy/zamia-speech)
