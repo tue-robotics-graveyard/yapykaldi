@@ -21,10 +21,31 @@ operating systems (preferably Ubuntu>=18.04).
 * pybind11
 * pkgconfig
 * pyaudio
-* [kaldi-asr](http://kaldi-asr.org)
+* [kaldi-asr](http://kaldi-asr.org) or [tue-robotics fork of kaldi-asr](https://github.com/tue-robotics/kaldi.git)
 
 ### Installation
-1. Install kaldi-asr using CMake and add the `pkgconfig` directory to `PKG_CONFIG_PATH` in `~/.bashrc`
+#### Using `tue-env` (Recommended for members of tue-robotics)
+```bash
+tue-get install python-yapykaldi
+```
+This does not install the test scripts and data directory at the moment.
+
+#### From source
+1. Install dependencies
+    ```bash
+    sudo apt-get install build-essential portaudio19-dev
+    pip install setuptools numpy pybind11 pkgconfig pyaudio
+    ```
+    
+1. **[Recommended]** Install kaldi-asr from tue-robotics fork. This fork has some modifications to the cmake generate script and comes with installation scripts that ensure the pkgconfig file is generated correctly and is available to the bash environment
+    ```bash
+    git clone https://github.com/tue-robotics/kaldi.git
+    cd kaldi
+    ./install.bash --tue
+    echo "source ~/kaldi/setup.bash" >> ~/.bashrc
+    ```
+    
+1. **[Alternative]** Install kaldi-asr from the upstream [kaldi repository](https://github.com/kaldi-asr/kaldi.git) using CMake with -DBUILD_SHARED_LIBS=ON. Create a pkgconfig file in `dist/lib/pkgconfig/` (relative to repository root) and add the following to `~/.bashrc`
     ```bash
     if [[ :$PKG_CONFIG_PATH: != *:$KALDI_ROOT/dist/lib/pkgconfig:* ]]
     then
@@ -39,7 +60,7 @@ operating systems (preferably Ubuntu>=18.04).
     pip install .
     ```
 
-1. [Optional] Download nnet3 models to run examples
+1. **[Optional]** Download nnet3 models to run examples
     ```bash
     cd yapykaldi/data
     wget https://github.com/tue-robotics/yapykaldi/releases/download/v0.1.0/kaldi-generic-en-tdnn_fl-r20190609.tar.xz
@@ -48,6 +69,8 @@ operating systems (preferably Ubuntu>=18.04).
     ```
 
 ### Examples
+To run the examples the optional step from installation from source needs to be completed.
+
 1. Test kaldi nnet3 model using [test_nnet3.py](./test/test_nnet3.py)
 2. Test simple audo recording using [test_audio.py](test/test_audio.py)
 3. Test continuous live speech recognition using [test_live.py](test/test_live.py)
