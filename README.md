@@ -39,6 +39,14 @@ operating systems (preferably Ubuntu>=18.04).
     pip install .
     ```
 
+1. [Optional] Download nnet3 models to run examples
+    ```bash
+    cd yapykaldi/data
+    wget https://github.com/tue-robotics/yapykaldi/releases/download/v0.1.0/kaldi-generic-en-tdnn_fl-r20190609.tar.xz
+    tar xf kaldi-generic-en-tdnn_fl-r20190609.tar.xz
+    mv kaldi-generic-en-tdnn_fl-r20190609 kaldi-generic-en-tdnn_fl-latest
+    ```
+
 ### Examples
 1. Test kaldi nnet3 model using [test_nnet3.py](./test/test_nnet3.py)
 2. Test simple audo recording using [test_audio.py](test/test_audio.py)
