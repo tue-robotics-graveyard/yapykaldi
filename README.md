@@ -75,6 +75,15 @@ To run the examples the optional step from installation from source needs to be 
 2. Test simple audo recording using [test_audio.py](test/test_audio.py)
 3. Test continuous live speech recognition using [test_live.py](test/test_live.py)
 
+## Developer Guide
+### Basic Workflow
+#### Open Grammar
+yapykaldi can be used for both online and offline speech recognition with open grammar.
+
+The idea behind online speech recognition workflow is that a microphone stream (created using pyaudio) is connected to yapykaldi OnlineDecoder object using IPC. The microphone stream writes a stream chunk to the shared queue which is sequentially read by the OnlineDecoder object to generate a stream of recognized words. A signal handler listens for an interrupt signal which tells the OnlineDecoder to stop and finalize the recognition, and signals the microphone process to cleanly close the stream and write the heard data in a `wav` file. Refer to [test_live.py](test/test_live.py) for this workflow.
+
+The offline speech recognition workflow follows two approaches. First is to read the entire `wav` file and do the recognition over the entire file at once. Second is to create a data stream from the `wav` file to emulate a microphone and recognize data in chunks. Refer to [test_nnet3.py](test/test_nnet3.py) for this workflow.
+
 ## References
 * [py-kaldi-asr](https://github.com/gooofy/py-kaldi-asr)
 * [zamia-speech](https://github.com/gooofy/zamia-speech)
