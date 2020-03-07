@@ -30,8 +30,9 @@ stream.close()
 audio.terminate()
 
 # Write wav file
-with wave.open(WAVE_OUTPUT_FILENAME, 'wb') as obj:
-    obj.setnchannels(CHANNELS)
-    obj.setsampwidth(audio.get_sample_size(FORMAT))
-    obj.setframerate(RATE)
-    obj.writeframes(b''.join(frames))
+obj = wave.open(WAVE_OUTPUT_FILENAME, 'wb')
+obj.setnchannels(CHANNELS)
+obj.setsampwidth(audio.get_sample_size(FORMAT))
+obj.setframerate(RATE)
+obj.writeframes(b''.join(frames))
+obj.close()
