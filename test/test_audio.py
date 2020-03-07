@@ -1,5 +1,7 @@
-import pyaudio
+from __future__ import (print_function, division, absolute_import, unicode_literals)
+from builtins import *
 import wave
+import pyaudio
 
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
