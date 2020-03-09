@@ -33,8 +33,7 @@ class Asr(object):
         :param wav_out_fmt: Name format of the recorded audio files
         """
         output_dir = os.path.expanduser(output_dir)
-        if not os.path.isdir(output_dir):
-            os.makedirs(output_dir)
+        os.makedirs(output_dir, exist_ok=True)
 
         self.model_dir = model_dir
         self.model_type = model_type
