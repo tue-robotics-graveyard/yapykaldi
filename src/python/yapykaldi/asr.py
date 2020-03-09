@@ -1,5 +1,6 @@
 from __future__ import (print_function, division, absolute_import, unicode_literals)
 from builtins import *
+import os
 import time
 import struct
 import logging
@@ -16,7 +17,25 @@ logging.basicConfig(level=logging.INFO,
 
 
 class Asr(object):
-    def __init__(self, model_dir, model_type, output_dir, format=pyaudio.paInt16, channels=1, rate=16000, chunk=1024, timeout=2, wav_out_fmt=None):
+    """API for ASR"""
+    def __init__(self, model_dir, model_type, output_dir, format=pyaudio.paInt16, channels=1, rate=16000, chunk=1024,
+                 timeout=2, wav_out_fmt=None):
+        """
+        :param model_dir: Path to model directory
+        :param model_type: Type of ASR model 'nnet3' or 'hmm'
+        :param output_dir: Path to the directory where the recorded audio files will be written
+        :param format: (default pyaudio.paInt16) Data type of the audio stream
+        :param channels: (default 1) Number of channels of the audio stream
+        :param rate: (default 16000) Sampling frequency of the audio stream
+        :param chunk: (default 1024) Size of the audio stream buffer
+        :param timeout: (default 2) Time to wait for a new data buffer before stopping recognition due to unavailability
+        of data
+        :param wav_out_fmt: Name format of the recorded audio files
+        """
+        output_dir = os.path.expanduser(output_dir)
+        if not os.path.isdir(output_dir):
+            os.makedirs(output_dir)
+
         self.model_dir = model_dir
         self.model_type = model_type
         self.output_dir = output_dir
@@ -100,7 +119,9 @@ class Asr(object):
 
     def start(self):
         logging.info("Starting live speech recognition")
+        # Reset internal states at the start of a new call
         self._queue = multiprocessing.Queue()
+        self._finalize = False
 
         process = multiprocessing.Process(None, self.recognize, args=())
         process.start()
