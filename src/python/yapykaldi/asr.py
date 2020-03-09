@@ -35,19 +35,22 @@ class Asr(object):
         signal.signal(signal.SIGINT, self.interrupt_handle)
 
     def listen(self):
-        if self._finalize:
+        """Method to start listening to audio stream, adding data to process queue and writing wav file upon completion
+        of recognition"""
+
+        if self._finalize and (not self._queue):
             raise Exception("Asr object not initialized for recognition")
 
         # TODO: Check if stream is to be created once in the constructor
         stream = self._p.open(format=self.format, channels=self.channels, rate=self.rate, input=True,
-                frames_per_buffer=self.chunk)
+                              frames_per_buffer=self.chunk)
 
         logging.info("* start listening")
 
         frames = []
         while not self._finalize:
             data = stream.read(self.chunk)
-            self.queue.put(data)
+            self._queue.put(data)
             frames.append(data)
 
         logging.info("* stop listening")
@@ -67,12 +70,16 @@ class Asr(object):
         wav_out.close()
 
     def recognize(self):
+        """Method to start the recognition process on audio stream added to process queue"""
+
+        if self._finalize and (not self._queue):
+            raise Exception("Asr object not initialized for recognition")
         self.model = KaldiNNet3OnlineModel(self.model_dir)
         self.decoder = KaldiNNet3OnlineDecoder(self.model)
 
         while not self._finalize:
             try:
-                data = self.queue.get(block=True, timeout=self.timeout)
+                data = self._queue.get(block=True, timeout=self.timeout)
                 data = struct.unpack_from('<%dh' % self.chunk, data)
             except Exception:
                 break
@@ -85,13 +92,15 @@ class Asr(object):
                     raise RuntimeError("Decoding failed")
 
     def interrupt_handle(self, sig, frame):
+        """Interrupt handler that sets the flag to stop recognition and close audio stream"""
+
         logging.info("Handling interrupt")
         self._finalize = True
         time.sleep(3)
 
     def start(self):
         logging.info("Starting live speech recognition")
-        self.queue = multiprocessing.Queue()
+        self._queue = multiprocessing.Queue()
 
         process = multiprocessing.Process(None, self.recognize, args=())
         process.start()
