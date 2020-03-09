@@ -1,12 +1,14 @@
 from __future__ import (print_function, division, absolute_import, unicode_literals)
 from builtins import *
 import os
+import datetime
 import time
 import struct
 import logging
 import multiprocessing
 import signal
 import wave
+from string import Template
 import numpy as np
 import pyaudio
 from .nnet3 import KaldiNNet3OnlineDecoder, KaldiNNet3OnlineModel
@@ -19,7 +21,7 @@ logging.basicConfig(level=logging.INFO,
 class Asr(object):
     """API for ASR"""
     def __init__(self, model_dir, model_type, output_dir, format=pyaudio.paInt16, channels=1, rate=16000, chunk=1024,
-                 timeout=2, wav_out_fmt=None):
+                 timeout=2, wav_out_fmt="$date-$time"):
         """
         :param model_dir: Path to model directory
         :param model_type: Type of ASR model 'nnet3' or 'hmm'
@@ -34,6 +36,9 @@ class Asr(object):
         """
         output_dir = os.path.expanduser(output_dir)
         os.makedirs(output_dir, exist_ok=True)
+
+        if " " in wav_out_fmt:
+            raise ValueError("wav_out_fmt cannot have ' ' in the string")
 
         self.model_dir = model_dir
         self.model_type = model_type
@@ -77,8 +82,17 @@ class Asr(object):
         stream.close()
         self._p.terminate()
 
-        # TODO: Assign a unique path based on output_dir and wav_out_fmt
-        wav_out_path = None
+        dt_now = datetime.datetime.now()
+        e_sec = int((dt_now - dt_now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds() * 1000000)
+        wav_fname = Template(self.wav_out_fmt).safe_substitute(date=dt_now.strftime('%Y-%m-%d'), time=e_sec)
+        _, ext = os.path.splitext(wav_fname)
+        if not ext == '.wav':
+            wav_fname += '.wav'
+
+        wav_out_path = os.path.join(self.output_dir, wav_fname)
+        if os.path.exists(wav_out_path):
+            raise FileExistsError("Cannot create a new file: {}".format(wav_out_path))
+
         logging.info("* writing data to '{}'".format(wav_out_path))
         wav_out = wave.open(wav_out_path, 'wb')
         wav_out.setnchannels(self.channels)
