@@ -8,6 +8,7 @@ import logging
 import multiprocessing
 import signal
 import wave
+import errno
 from string import Template
 import numpy as np
 import pyaudio
@@ -16,6 +17,19 @@ from .nnet3 import KaldiNNet3OnlineDecoder, KaldiNNet3OnlineModel
 
 logging.basicConfig(level=logging.INFO,
                     format='(%(processName)-9s) %(message)s',)
+
+
+def makedir_exist_ok(dirpath):
+    """
+    Python2 support for os.makedirs(.., exist_ok=True)
+    """
+    try:
+        os.makedirs(dirpath)
+    except OSError as e:
+        if e.errno == errno.EEXIST:
+            pass
+        else:
+            raise
 
 
 class Asr(object):
@@ -35,7 +49,9 @@ class Asr(object):
         :param wav_out_fmt: Name format of the recorded audio files
         """
         output_dir = os.path.expanduser(output_dir)
-        os.makedirs(output_dir, exist_ok=True)
+
+        # TODO: Replace this with os.makedirs(output_dir, exist_ok=True) when dropping python2 support
+        makedir_exist_ok(output_dir)
 
         if " " in wav_out_fmt:
             raise ValueError("wav_out_fmt cannot have ' ' in the string")
