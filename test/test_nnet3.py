@@ -1,13 +1,21 @@
+#! /usr/bin/env python
+
 from __future__ import (print_function, division, absolute_import, unicode_literals)
-from builtins import *
+import argparse
 import math
 import struct
 import wave
 import numpy as np
 from yapykaldi import KaldiNNet3OnlineDecoder, KaldiNNet3OnlineModel
 
-model_dir = "../data/kaldi-generic-en-tdnn_fl-latest"
-wavfile = "../data/lsen1.wav"
+parser = argparse.ArgumentParser(description='Test NNet3')
+parser.add_argument('-m', '--model', help='Path to model', default="../data/kaldi-generic-en-tdnn_fl-latest")
+parser.add_argument('-w', '--wav', help='Path to wavfile', default="../data/lsen1.wav")
+
+args = parser.parse_args()
+
+model_dir = args.model
+wavfile = args.wav
 
 model = KaldiNNet3OnlineModel(model_dir)
 decoder = KaldiNNet3OnlineDecoder(model)
@@ -52,7 +60,7 @@ try:
     frame_rate = wavf.getframerate()
 
     total_num_frames = wavf.getnframes()
-    total_chunks = math.floor(total_num_frames/CHUNK)
+    total_chunks = int(math.floor(total_num_frames/CHUNK))
     finalize = False
 
     for i in range(0, total_chunks):
