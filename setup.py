@@ -149,6 +149,8 @@ setup(
         'pybind11',
         'setuptools',
         'pkgconfig',
+        'pyaudio',
+        'future',
     ],
     zip_safe=True,
     author='Arpit Aggarwal',
