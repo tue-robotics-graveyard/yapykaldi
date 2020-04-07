@@ -71,6 +71,8 @@ class Asr(object):
         self._finalize = Event()
         self._queue = None
 
+        self._string_recognized_callbacks = []
+
         # Handle interrupt
         signal.signal(signal.SIGINT, self.interrupt_handle)
 
@@ -137,6 +139,8 @@ class Asr(object):
                 if self.decoder.decode(self.rate, np.array(data, dtype=np.float32), self._finalize):
                     decoded_string, _ = self.decoder.get_decoded_string()
                     logging.info("** {}".format(decoded_string))
+                    for cb in self._string_recognized_callbacks:
+                        cb(decoded_string)
                 else:
                     raise RuntimeError("Decoding failed")
 
@@ -163,3 +167,12 @@ class Asr(object):
 
         process.join()
         logging.info("Completed ASR")
+
+    def register_callback(self, callback):
+        """
+        Register a callback to be called with the recognized text as a string
+
+        :param callback: a function taking a single string as it's parameter
+        :return: None
+        """
+        self._string_recognized_callbacks += [callback]
