@@ -1,3 +1,5 @@
 version.py
 *.egg-info/
 *.so
+
+.idea
