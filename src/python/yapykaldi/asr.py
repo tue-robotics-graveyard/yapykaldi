@@ -6,6 +6,7 @@ import time
 import struct
 import logging
 import multiprocessing
+from threading import Event
 import signal
 import wave
 import errno
@@ -67,7 +68,7 @@ class Asr(object):
         self.wav_out_fmt = wav_out_fmt
 
         self._p = pyaudio.PyAudio()
-        self._finalize = False
+        self._finalize = Event()
         self._queue = None
 
         # Handle interrupt
@@ -77,7 +78,7 @@ class Asr(object):
         """Method to start listening to audio stream, adding data to process queue and writing wav file upon completion
         of recognition"""
 
-        if self._finalize and (not self._queue):
+        if self._finalize.is_set and (not self._queue):
             raise Exception("Asr object not initialized for recognition")
 
         # TODO: Check if stream is to be created once in the constructor
@@ -87,7 +88,7 @@ class Asr(object):
         logging.info("* start listening")
 
         frames = []
-        while not self._finalize:
+        while not self._finalize.is_set:
             data = stream.read(self.chunk)
             self._queue.put(data)
             frames.append(data)
@@ -125,7 +126,7 @@ class Asr(object):
         self.model = KaldiNNet3OnlineModel(self.model_dir)
         self.decoder = KaldiNNet3OnlineDecoder(self.model)
 
-        while not self._finalize:
+        while not self._finalize.is_set:
             try:
                 data = self._queue.get(block=True, timeout=self.timeout)
                 data = struct.unpack_from('<%dh' % self.chunk, data)
@@ -143,14 +144,17 @@ class Asr(object):
         """Interrupt handler that sets the flag to stop recognition and close audio stream"""
 
         logging.info("Handling interrupt")
-        self._finalize = True
+        self.stop()
+
+    def stop(self):
+        self._finalize.set()
         time.sleep(3)
 
     def start(self):
         logging.info("Starting live speech recognition")
         # Reset internal states at the start of a new call
         self._queue = multiprocessing.Queue()
-        self._finalize = False
+        self._finalize.clear()
 
         process = multiprocessing.Process(None, self.recognize, args=())
         process.start()
