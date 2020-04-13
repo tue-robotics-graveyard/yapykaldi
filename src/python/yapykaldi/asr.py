@@ -162,12 +162,10 @@ class Asr(object):
 
         self.model_dir = model_dir
         self.model_type = model_type
-        self.output_dir = output_dir
 
         self.stream = stream  # type: AudioStreamer
 
         self.timeout = timeout
-        self.wav_out_fmt = wav_out_fmt
 
         self._finalize = Event()
 
@@ -190,10 +188,15 @@ class Asr(object):
             try:
                 chunk = self.stream.get_next_chunk(self.timeout)
                 data = struct.unpack_from('<%dh' % self.stream.chunksize, chunk)
-            except Exception:
+            except StopIteration as e:
+                logging.info("Stream reached it end")
+                logging.error(e)
+                self.stop()
+            except Exception as e:
+                logging.error(e)
                 break
             else:
-                logging.info("Recognizing chunk")
+                logging.info("Recognizing chunk:")
                 if self.decoder.decode(self.stream.rate,
                                        np.array(data, dtype=np.float32),
                                        self._finalize.is_set()):
