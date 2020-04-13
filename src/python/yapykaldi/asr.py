@@ -81,7 +81,6 @@ class PyAudioMicrophoneStreamer(AudioStreamer):
         self._pyaudio.terminate()
 
 
-
 class WaveFileStreamer(AudioStreamer):
     def __init__(self, filename, rate=16000, chunksize=1024):
         super(WaveFileStreamer, self).__init__(rate=rate, chunksize=chunksize)
@@ -115,6 +114,14 @@ class WaveFileStreamer(AudioStreamer):
 
 class AudioSaver(object):
     def __init__(self, wavpath, fmt=pyaudio.paInt16, channels=1, rate=16000, chunk=1024):
+        """
+
+        :param wavpath: location where to save audio to
+        :param fmt: (default pyaudio.paInt16) Data type of the audio stream
+        :param channels: (default 1) Number of channels of the audio stream
+        :param rate: (default 16000) Sampling frequency of the audio stream
+        :param chunk: (default 1024) Size of the audio stream buffer
+        """
         self._pyaudio = pyaudio.PyAudio()
         self.wavpath = wavpath
         self.format = fmt
@@ -144,26 +151,17 @@ class Asr(object):
         :param model_dir: Path to model directory
         :param model_type: Type of ASR model 'nnet3' or 'hmm'
         :param output_dir: Path to the directory where the recorded audio files will be written
-        :param format: (default pyaudio.paInt16) Data type of the audio stream
-        :param channels: (default 1) Number of channels of the audio stream
-        :param rate: (default 16000) Sampling frequency of the audio stream
-        :param chunk: (default 1024) Size of the audio stream buffer
         :param timeout: (default 2) Time to wait for a new data buffer before stopping recognition due to unavailability
         of data
-        :param wav_out_fmt: Name format of the recorded audio files
         """
-        output_dir = os.path.expanduser(output_dir)
-
-        # TODO: Replace this with os.makedirs(output_dir, exist_ok=True) when dropping python2 support
-        makedir_exist_ok(output_dir)
-
-        if " " in wav_out_fmt:
-            raise ValueError("wav_out_fmt cannot have ' ' in the string")
-
         self.model_dir = model_dir
         self.model_type = model_type
 
         self.stream = stream  # type: AudioStreamer
+
+        logging.info("KaldiNNet3OnlineModel initializing..")
+        self.model = KaldiNNet3OnlineModel(self.model_dir)
+        logging.info("KaldiNNet3OnlineModel initialized")
 
         self.timeout = timeout
 
@@ -176,12 +174,9 @@ class Asr(object):
 
         if self._finalize.is_set():
             raise Exception("Asr object not initialized for recognition")
-        logging.info("KaldiNNet3OnlineModel initializing..")
-        self.model = KaldiNNet3OnlineModel(self.model_dir)
-        logging.info("KaldiNNet3OnlineModel initialized")
 
         logging.info("KaldiNNet3OnlineDecoder initializing...")
-        self.decoder = KaldiNNet3OnlineDecoder(self.model)
+        decoder = KaldiNNet3OnlineDecoder(self.model)
         logging.info("KaldiNNet3OnlineDecoder initialized")
 
         while not self._finalize.is_set():
@@ -197,11 +192,11 @@ class Asr(object):
                 break
             else:
                 logging.info("Recognizing chunk:")
-                if self.decoder.decode(self.stream.rate,
-                                       np.array(data, dtype=np.float32),
-                                       self._finalize.is_set()):
-                    decoded_string, likelyhood = self.decoder.get_decoded_string()
-                    logging.info("** ({}): {}".format(likelyhood, decoded_string))
+                if decoder.decode(self.stream.rate,
+                                  np.array(data, dtype=np.float32),
+                                  self._finalize.is_set()):
+                    decoded_string, likelihood = decoder.get_decoded_string()
+                    logging.info("** ({}): {}".format(likelihood, decoded_string))
                     for cb in self._string_recognized_callbacks:
                         cb(decoded_string)
                 else:
