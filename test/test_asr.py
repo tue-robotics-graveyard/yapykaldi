@@ -31,9 +31,9 @@ def interrupt_handle(sig, frame):
     """Interrupt handler that sets the flag to stop recognition and close audio stream"""
     print("Stopping ASR")
     asr.stop()
-    time.sleep(3)
 
 # Handle interrupt
 signal.signal(signal.SIGINT, interrupt_handle)
 
 asr.start()
+print("ASR started")

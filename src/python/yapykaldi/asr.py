@@ -69,17 +69,8 @@ class PyAudioMicrophoneStreamer(AudioStreamer):
                                          input=True,
                                          frames_per_buffer=self.chunksize)
 
-        self._background_process = multiprocessing.Process(None, self._listen, args=())
-        self._background_process.start()
-
-    def _listen(self):
-        while not self._stop.is_set():
-            data = self.stream.read(self.chunksize)
-            logging.debug("Read data: {}".format(len(data)))
-            self._queue.put(data)
-
     def get_next_chunk(self, timeout):
-        return self._queue.get(block=True, timeout=timeout)
+        return self.stream.read(self.chunksize)
 
     def stop(self):
         self._stop.set()
@@ -88,10 +79,6 @@ class PyAudioMicrophoneStreamer(AudioStreamer):
         self.stream.close()
         self._pyaudio.terminate()
 
-        if self._background_process.is_alive():
-            self._background_process.join(1)
-        else:
-            logging.info("Background process has already died. RIP")
 
 
 class WaveFileStreamer(AudioStreamer):
@@ -177,49 +164,8 @@ class Asr(object):
         self.wav_out_fmt = wav_out_fmt
 
         self._finalize = Event()
-        self._queue = None
 
         self._string_recognized_callbacks = []
-
-    def listen(self):
-        """Method to start listening to audio stream, adding data to process queue and writing wav file upon completion
-        of recognition"""
-
-        if self._finalize.is_set and (not self._queue):
-            raise Exception("Asr object not initialized for recognition")
-
-        logging.info("* start listening")
-
-        frames = []
-        while not self._finalize.is_set:
-            data = stream.read(self.chunk)
-            self._queue.put(data)
-            frames.append(data)
-
-        logging.info("* stop listening")
-
-        stream.stop_stream()
-        stream.close()
-        self._p.terminate()
-
-        dt_now = datetime.datetime.now()
-        e_sec = int((dt_now - dt_now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds() * 1000000)
-        wav_fname = Template(self.wav_out_fmt).safe_substitute(date=dt_now.strftime('%Y-%m-%d'), time=e_sec)
-        _, ext = os.path.splitext(wav_fname)
-        if not ext == '.wav':
-            wav_fname += '.wav'
-
-        wav_out_path = os.path.join(self.output_dir, wav_fname)
-        if os.path.exists(wav_out_path):
-            raise FileExistsError("Cannot create a new file: {}".format(wav_out_path))
-
-        logging.info("* writing data to '{}'".format(wav_out_path))
-        wav_out = wave.open(wav_out_path, 'wb')
-        wav_out.setnchannels(self.channels)
-        wav_out.setsampwidth(self._p.get_sample_size(self.format))
-        wav_out.setframerate(self.rate)
-        wav_out.writeframes(b''.join(frames))
-        wav_out.close()
 
     def recognize(self):
         """Method to start the recognition process on audio stream added to process queue"""
@@ -261,16 +207,10 @@ class Asr(object):
         logging.info("Starting speech recognition")
         # Reset internal states at the start of a new call
 
-        # self._queue = multiprocessing.Queue()
         self._finalize.clear()
 
-        # process = multiprocessing.Process(None, self.recognize, args=())
-        # process.start()
-
-        # self.listen()
         self.stream.start()
         self.recognize()
-        # process.join()
         logging.info("Completed ASR")
 
     def register_callback(self, callback):
