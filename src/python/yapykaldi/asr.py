@@ -50,7 +50,7 @@ class AudioStreamer(object):
 
 
 class PyAudioMicrophoneStreamer(AudioStreamer):
-    def __init__(self, fmt=pyaudio.paInt16, channels=1, rate=16000, chunksize=1024):
+    def __init__(self, fmt=pyaudio.paInt16, channels=1, rate=16000, chunksize=1024, saver=None):
         super(PyAudioMicrophoneStreamer, self).__init__(rate=rate, chunksize=chunksize)
 
         self._pyaudio = pyaudio.PyAudio()
@@ -59,7 +59,8 @@ class PyAudioMicrophoneStreamer(AudioStreamer):
 
         self.stream = None
 
-        self._background_process = None  # type: multiprocessing.Process
+        self.saver = saver
+
         self._stop = Event()
 
     def start(self):
@@ -121,12 +122,17 @@ class AudioSaver(object):
         self.rate = rate
         self.chunk = chunk
 
-    def write_frames(self, frames):
+        self.frames = []
+
+    def add_chunk(self, chunk):
+        self.frames += chunk
+
+    def write_frames(self, frames=None):
         wav_out = wave.open(self.wavpath, 'wb')
         wav_out.setnchannels(self.channels)
         wav_out.setsampwidth(self._pyaudio.get_sample_size(self.format))
         wav_out.setframerate(self.rate)
-        wav_out.writeframes(b''.join(frames))
+        wav_out.writeframes(b''.join(frames if frames else self.frames))
         wav_out.close()
 
 

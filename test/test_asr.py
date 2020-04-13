@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 import argparse
 import time
-from yapykaldi.asr import Asr, WaveFileStreamer, PyAudioMicrophoneStreamer
+from yapykaldi.asr import Asr, WaveFileStreamer, PyAudioMicrophoneStreamer, AudioSaver
 import signal
 
 model_dir = "../data/kaldi-generic-en-tdnn_fl-latest"
@@ -20,7 +20,8 @@ print(args)
 if args.file:
     streamer = WaveFileStreamer(args.file)
 elif args.live:
-    streamer = PyAudioMicrophoneStreamer()
+    saver = AudioSaver("dump.wav")
+    streamer = PyAudioMicrophoneStreamer(saver=saver)
 else:
     raise Exception("Specify either --live or --file=audio.wav")
 
