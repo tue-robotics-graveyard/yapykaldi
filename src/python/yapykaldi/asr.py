@@ -145,12 +145,10 @@ class AudioSaver(object):
 
 class Asr(object):
     """API for ASR"""
-    def __init__(self, model_dir, model_type, output_dir, stream,
-                 timeout=2, wav_out_fmt="$date-$time"):
+    def __init__(self, model_dir, model_type, stream, timeout=2):
         """
         :param model_dir: Path to model directory
         :param model_type: Type of ASR model 'nnet3' or 'hmm'
-        :param output_dir: Path to the directory where the recorded audio files will be written
         :param timeout: (default 2) Time to wait for a new data buffer before stopping recognition due to unavailability
         of data
         """

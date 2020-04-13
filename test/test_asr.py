@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import argparse
+import os
 import time
 from yapykaldi.asr import Asr, WaveFileStreamer, PyAudioMicrophoneStreamer, AudioSaver
 import signal
@@ -9,23 +10,22 @@ model_type = "nnet3"
 output_dir = "./output"
 
 parser = argparse.ArgumentParser(description='Test Automatic Speech Recoognition')
-parser.add_argument('--file', type=file,
+parser.add_argument('--file', type=str,
                     help='Read audio from a file')
 parser.add_argument('--live', action='store_true',
                     help='Transcribe live audio')
 
 args = parser.parse_args()
-print(args)
 
 if args.file:
-    streamer = WaveFileStreamer(args.file)
+    streamer = WaveFileStreamer(open(os.path.expanduser(args.file)))
 elif args.live:
     saver = AudioSaver("dump.wav")
     streamer = PyAudioMicrophoneStreamer(saver=saver)
 else:
     raise Exception("Specify either --live or --file=audio.wav")
 
-asr = Asr(model_dir, model_type, output_dir, streamer)
+asr = Asr(model_dir, model_type, streamer)
 
 
 def interrupt_handle(sig, frame):
