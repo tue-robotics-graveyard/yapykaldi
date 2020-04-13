@@ -165,7 +165,8 @@ class Asr(object):
 
         self._finalize = Event()
 
-        self._string_recognized_callbacks = []
+        self._string_partially_recognized_callbacks = []
+        self._string_fully_recognized_callbacks = []
 
     def recognize(self):
         """Method to start the recognition process on audio stream added to process queue"""
@@ -177,6 +178,7 @@ class Asr(object):
         decoder = KaldiNNet3OnlineDecoder(self.model)
         logging.info("KaldiNNet3OnlineDecoder initialized")
 
+        decoded_string = ""
         while not self._finalize.is_set():
             try:
                 chunk = self.stream.get_next_chunk(self.timeout)
@@ -195,10 +197,13 @@ class Asr(object):
                                   self._finalize.is_set()):
                     decoded_string, likelihood = decoder.get_decoded_string()
                     logging.info("** ({}): {}".format(likelihood, decoded_string))
-                    for cb in self._string_recognized_callbacks:
+                    for cb in self._string_partially_recognized_callbacks:
                         cb(decoded_string)
                 else:
                     raise RuntimeError("Decoding failed")
+
+        for cb in self._string_fully_recognized_callbacks:
+            cb(decoded_string)
 
     def stop(self):
         logging.info("Stop ASR")
@@ -215,11 +220,20 @@ class Asr(object):
         self.recognize()
         logging.info("Completed ASR")
 
-    def register_callback(self, callback):
+    def register_partially_recognized_callback(self, callback):
         """
-        Register a callback to be called with the recognized text as a string
+        Register a callback to receive a partially decoded string, when the utterance is still incomplete.
 
         :param callback: a function taking a single string as it's parameter
         :return: None
         """
-        self._string_recognized_callbacks += [callback]
+        self._string_partially_recognized_callbacks += [callback]
+
+    def register_fully_recognized_callback(self, callback):
+        """
+        Register a callback to receive the completed utterance, when there is no more text to be recognized.
+
+        :param callback: a function taking a single string as it's parameter
+        :return: None
+        """
+        self._string_fully_recognized_callbacks += [callback]
