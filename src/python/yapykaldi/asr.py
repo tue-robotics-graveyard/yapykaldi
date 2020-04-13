@@ -30,6 +30,92 @@ def makedir_exist_ok(dirpath):
             raise
 
 
+class AudioStreamer(object):
+    def __init__(self):
+        self._queue = multiprocessing.Queue()
+
+    def start(self):
+        raise NotImplementedError()
+
+    def stop(self):
+        raise NotImplementedError()
+
+
+class PyAudioMicrophoneStreamer(AudioStreamer):
+    def __init__(self, fmt=pyaudio.paInt16, channels=1, rate=16000, chunk=1024):
+        super(PyAudioMicrophoneStreamer, self).__init__()
+
+        self._pyaudio = pyaudio.PyAudio()
+        self.format = fmt
+        self.channels = channels
+        self.rate = rate
+        self.chunk = chunk
+
+        self._stop = Event()
+
+    def start(self):
+        stream = self._pyaudio.open(format=self.format, channels=self.channels, rate=self.rate,
+                                    input=True,
+                                    frames_per_buffer=self.chunk)
+
+        while not self._stop.is_set():
+            data = stream.read(self.chunk)
+            self._queue.put(data)
+
+        stream.stop_stream()
+        stream.close()
+        self._pyaudio.terminate()
+
+    def stop(self):
+        self._stop.set()
+
+class PyAudioFileStreamer(AudioStreamer):
+    def __init__(self, filename, fmt=pyaudio.paInt16, channels=1, rate=16000, chunk=1024):
+        super(PyAudioFileStreamer, self).__init__()
+
+        self._pyaudio = pyaudio.PyAudio()
+        self.format = fmt
+        self.channels = channels
+        self.rate = rate
+        self.chunk = chunk
+
+        self._stop = Event()
+
+    def start(self):
+        stream = self._pyaudio.open(format=self.format, channels=self.channels, rate=self.rate,
+                                    input=True,
+                                    frames_per_buffer=self.chunk)
+
+        while not self._stop.is_set():
+            data = stream.read(self.chunk)
+            self._queue.put(data)
+
+        stream.stop_stream()
+        stream.close()
+        self._pyaudio.terminate()
+
+    def stop(self):
+        self._stop.set()
+
+
+class AudioSaver(object):
+    def __init__(self, wavpath, fmt=pyaudio.paInt16, channels=1, rate=16000, chunk=1024):
+        self._pyaudio = pyaudio.PyAudio()
+        self.wavpath = wavpath
+        self.format = fmt
+        self.channels = channels
+        self.rate = rate
+        self.chunk = chunk
+
+    def write_frames(self, frames):
+        wav_out = wave.open(self.wavpath, 'wb')
+        wav_out.setnchannels(self.channels)
+        wav_out.setsampwidth(self._pyaudio.get_sample_size(self.format))
+        wav_out.setframerate(self.rate)
+        wav_out.writeframes(b''.join(frames))
+        wav_out.close()
+
+
 class Asr(object):
     """API for ASR"""
     def __init__(self, model_dir, model_type, output_dir, format=pyaudio.paInt16, channels=1, rate=16000, chunk=1024,
