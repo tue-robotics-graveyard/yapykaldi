@@ -35,4 +35,5 @@ def interrupt_handle(sig, frame):
 
 # Handle interrupt
 signal.signal(signal.SIGINT, interrupt_handle)
+
 asr.start()

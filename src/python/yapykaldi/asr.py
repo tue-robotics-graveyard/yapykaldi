@@ -249,6 +249,7 @@ class Asr(object):
     def stop(self):
         logging.info("Stop ASR")
         self._finalize.set()
+        self.stream.stop()
 
     def start(self):
         logging.info("Starting speech recognition")
