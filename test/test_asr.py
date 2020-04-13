@@ -1,12 +1,30 @@
+#! /usr/bin/env python
+import argparse
 import time
-from yapykaldi.asr import Asr, WaveFileStreamer
+from yapykaldi.asr import Asr, WaveFileStreamer, PyAudioMicrophoneStreamer
 import signal
 
 model_dir = "../data/kaldi-generic-en-tdnn_fl-latest"
 model_type = "nnet3"
 output_dir = "./output"
 
-asr = Asr(model_dir, model_type, output_dir, WaveFileStreamer('file.wav'))
+parser = argparse.ArgumentParser(description='Test Automatic Speech Recoognition')
+parser.add_argument('--file', type=file,
+                    help='Read audio from a file')
+parser.add_argument('--live', action='store_true',
+                    help='Transcribe live audio')
+
+args = parser.parse_args()
+print(args)
+
+if args.file:
+    streamer = WaveFileStreamer(args.file)
+elif args.live:
+    streamer = PyAudioMicrophoneStreamer()
+else:
+    raise Exception("Specify either --live or --file=audio.wav")
+
+asr = Asr(model_dir, model_type, output_dir, streamer)
 
 
 def interrupt_handle(sig, frame):

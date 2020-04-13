@@ -251,7 +251,7 @@ class Asr(object):
         self._finalize.set()
 
     def start(self):
-        logging.info("Starting live speech recognition")
+        logging.info("Starting speech recognition")
         # Reset internal states at the start of a new call
 
         # self._queue = multiprocessing.Queue()
