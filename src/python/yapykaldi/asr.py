@@ -15,7 +15,7 @@ import pyaudio
 from .nnet3 import KaldiNNet3OnlineDecoder, KaldiNNet3OnlineModel
 
 
-logging.basicConfig(level=logging.INFO,
+logging.basicConfig(level=logging.DEBUG,
                     format='[%(asctime)s](%(processName)-9s) %(message)s',)
 
 
@@ -57,22 +57,25 @@ class PyAudioMicrophoneStreamer(AudioStreamer):
         self.format = fmt
         self.channels = channels
 
+        self.stream = None
+
+        self._background_process = None  # type: multiprocessing.Process
+        self._stop = Event()
+
+    def start(self):
         self.stream = self._pyaudio.open(format=self.format,
                                          channels=self.channels,
                                          rate=self.rate,
                                          input=True,
                                          frames_per_buffer=self.chunksize)
 
-        self._background_process = None  # type: multiprocessing.Process
-        self._stop = Event()
-
-    def start(self):
         self._background_process = multiprocessing.Process(None, self._listen, args=())
         self._background_process.start()
 
     def _listen(self):
         while not self._stop.is_set():
             data = self.stream.read(self.chunksize)
+            logging.debug("Read data: {}".format(len(data)))
             self._queue.put(data)
 
     def get_next_chunk(self, timeout):
@@ -85,7 +88,10 @@ class PyAudioMicrophoneStreamer(AudioStreamer):
         self.stream.close()
         self._pyaudio.terminate()
 
-        self._background_process.join()
+        if self._background_process.is_alive():
+            self._background_process.join(1)
+        else:
+            logging.info("Background process has already died. RIP")
 
 
 class WaveFileStreamer(AudioStreamer):
