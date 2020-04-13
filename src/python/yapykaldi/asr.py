@@ -4,8 +4,7 @@ import os
 import datetime
 import struct
 import logging
-import multiprocessing
-from threading import Event
+from multiprocessing import Event, Process, Queue
 import wave
 import errno
 from string import Template
@@ -146,10 +145,10 @@ class Asr(object):
     def start(self):
         logging.info("Starting live speech recognition")
         # Reset internal states at the start of a new call
-        self._queue = multiprocessing.Queue()
+        self._queue = Queue()
         self._finalize.clear()
 
-        process = multiprocessing.Process(None, self.recognize, args=())
+        process = Process(None, self.recognize, args=())
         process.start()
 
         self.listen()
