@@ -2,12 +2,10 @@ from __future__ import (print_function, division, absolute_import, unicode_liter
 from builtins import *
 import os
 import datetime
-import time
 import struct
 import logging
 import multiprocessing
 from threading import Event
-import signal
 import wave
 import errno
 from string import Template
@@ -72,9 +70,6 @@ class Asr(object):
         self._queue = None
 
         self._string_recognized_callbacks = []
-
-        # Handle interrupt
-        signal.signal(signal.SIGINT, self.interrupt_handle)
 
     def listen(self):
         """Method to start listening to audio stream, adding data to process queue and writing wav file upon completion
@@ -144,15 +139,9 @@ class Asr(object):
                 else:
                     raise RuntimeError("Decoding failed")
 
-    def interrupt_handle(self, sig, frame):
-        """Interrupt handler that sets the flag to stop recognition and close audio stream"""
-
-        logging.info("Handling interrupt")
-        self.stop()
-
     def stop(self):
+        logging.info("Stop ASR")
         self._finalize.set()
-        time.sleep(3)
 
     def start(self):
         logging.info("Starting live speech recognition")
