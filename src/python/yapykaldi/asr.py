@@ -59,7 +59,7 @@ class PyAudioMicrophoneStreamer(AudioStreamer):
 
         self.stream = None
 
-        self.saver = saver
+        self.saver = saver  # type: AudioSaver
 
         self._stop = Event()
 
@@ -71,7 +71,10 @@ class PyAudioMicrophoneStreamer(AudioStreamer):
                                          frames_per_buffer=self.chunksize)
 
     def get_next_chunk(self, timeout):
-        return self.stream.read(self.chunksize)
+        chunk = self.stream.read(self.chunksize)
+        if self.saver:
+            self.saver.add_chunk(chunk)
+        return chunk
 
     def stop(self):
         self._stop.set()
@@ -79,6 +82,9 @@ class PyAudioMicrophoneStreamer(AudioStreamer):
         self.stream.stop_stream()
         self.stream.close()
         self._pyaudio.terminate()
+
+        if self.saver:
+            self.saver.write_frames()
 
 
 class WaveFileStreamer(AudioStreamer):
