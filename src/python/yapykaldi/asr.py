@@ -1,19 +1,15 @@
 from __future__ import (print_function, division, absolute_import, unicode_literals)
-from builtins import *
-import os
-import datetime
-import struct
-import logging
-from multiprocessing import Event, Process, Queue
-import math
-import multiprocessing
-import wave
-import errno
-from string import Template
-import numpy as np
-import pyaudio
-from .nnet3 import KaldiNNet3OnlineDecoder, KaldiNNet3OnlineModel
 
+import errno
+import logging
+import os
+import struct
+from multiprocessing import Event
+
+import numpy as np
+from builtins import *
+
+from .nnet3 import KaldiNNet3OnlineDecoder, KaldiNNet3OnlineModel
 
 logging.basicConfig(level=logging.DEBUG,
                     format='[%(asctime)s](%(processName)-9s) %(message)s',)
@@ -30,123 +26,6 @@ def makedir_exist_ok(dirpath):
             pass
         else:
             raise
-
-
-class AudioStreamer(object):
-    def __init__(self, rate=16000, chunksize=1024):
-        self._queue = multiprocessing.Queue()
-
-        self.rate = rate
-        self.chunksize = chunksize
-
-    def start(self):
-        raise NotImplementedError()
-
-    def stop(self):
-        raise NotImplementedError()
-
-    def get_next_chunk(self, timeout):
-        raise NotImplementedError()
-
-
-class PyAudioMicrophoneStreamer(AudioStreamer):
-    def __init__(self, fmt=pyaudio.paInt16, channels=1, rate=16000, chunksize=1024, saver=None):
-        super(PyAudioMicrophoneStreamer, self).__init__(rate=rate, chunksize=chunksize)
-
-        self._pyaudio = pyaudio.PyAudio()
-        self.format = fmt
-        self.channels = channels
-
-        self.stream = None
-
-        self.saver = saver  # type: AudioSaver
-
-        self._stop = Event()
-
-    def start(self):
-        self.stream = self._pyaudio.open(format=self.format,
-                                         channels=self.channels,
-                                         rate=self.rate,
-                                         input=True,
-                                         frames_per_buffer=self.chunksize)
-
-    def get_next_chunk(self, timeout):
-        chunk = self.stream.read(self.chunksize)
-        if self.saver:
-            self.saver.add_chunk(chunk)
-        return chunk
-
-    def stop(self):
-        self._stop.set()
-
-        self.stream.stop_stream()
-        self.stream.close()
-        self._pyaudio.terminate()
-
-        if self.saver:
-            self.saver.write_frames()
-
-
-class WaveFileStreamer(AudioStreamer):
-    def __init__(self, filename, rate=16000, chunksize=1024):
-        super(WaveFileStreamer, self).__init__(rate=rate, chunksize=chunksize)
-
-        self.wavf = wave.open(filename, 'rb')
-        assert self.wavf.getnchannels() == 1
-        assert self.wavf.getsampwidth() == 2
-        assert self.wavf.getnframes() > 0
-
-        self._frame_rate = self.wavf.getframerate()
-        self.total_num_frames = None
-        self.total_chunks = None
-        self.read_chuncks = None
-
-    def start(self):
-        self.total_num_frames = self.wavf.getnframes()
-        self.total_chunks = math.floor(self.total_num_frames / self.chunksize)
-        self.read_chuncks = 0
-
-    def get_next_chunk(self, timeout):
-        if self.read_chuncks < self.total_chunks:
-            frames = self.wavf.readframes(self.chunksize)
-            self.read_chuncks += 1
-            return frames
-        else:
-            raise StopIteration()
-
-    def stop(self):
-        self.wavf.close()
-
-
-class AudioSaver(object):
-    def __init__(self, wavpath, fmt=pyaudio.paInt16, channels=1, rate=16000, chunk=1024):
-        """
-
-        :param wavpath: location where to save audio to
-        :param fmt: (default pyaudio.paInt16) Data type of the audio stream
-        :param channels: (default 1) Number of channels of the audio stream
-        :param rate: (default 16000) Sampling frequency of the audio stream
-        :param chunk: (default 1024) Size of the audio stream buffer
-        """
-        self._pyaudio = pyaudio.PyAudio()
-        self.wavpath = wavpath
-        self.format = fmt
-        self.channels = channels
-        self.rate = rate
-        self.chunk = chunk
-
-        self.frames = []
-
-    def add_chunk(self, chunk):
-        self.frames += chunk
-
-    def write_frames(self, frames=None):
-        wav_out = wave.open(self.wavpath, 'wb')
-        wav_out.setnchannels(self.channels)
-        wav_out.setsampwidth(self._pyaudio.get_sample_size(self.format))
-        wav_out.setframerate(self.rate)
-        wav_out.writeframes(b''.join(frames if frames else self.frames))
-        wav_out.close()
 
 
 class Asr(object):

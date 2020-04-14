@@ -2,7 +2,9 @@
 import argparse
 import os
 import time
-from yapykaldi.asr import Asr, WaveFileStreamer, PyAudioMicrophoneStreamer, AudioSaver
+from yapykaldi.asr import Asr, WaveFileStreamer
+from yapykaldi.audio_handling.sinks import WaveFileSink
+from yapykaldi.audio_handling.sources import PyAudioMicrophoneSource, WaveFileSource
 import signal
 
 model_dir = "../data/kaldi-generic-en-tdnn_fl-latest"
@@ -18,10 +20,10 @@ parser.add_argument('--live', action='store_true',
 args = parser.parse_args()
 
 if args.file:
-    streamer = WaveFileStreamer(open(os.path.expanduser(args.file)))
+    streamer = WaveFileSource(open(os.path.expanduser(args.file)))
 elif args.live:
-    saver = AudioSaver("dump.wav")
-    streamer = PyAudioMicrophoneStreamer(saver=saver)
+    saver = WaveFileSink("dump.wav")
+    streamer = PyAudioMicrophoneSource(saver=saver)
 else:
     raise Exception("Specify either --live or --file=audio.wav")
 
