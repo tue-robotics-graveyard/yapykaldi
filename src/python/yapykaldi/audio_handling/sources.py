@@ -1,7 +1,9 @@
 import math
-import multiprocessing
 import wave
-from multiprocessing import Event
+from threading import Event
+from threading import Thread
+from queue import Queue as threadedQueue
+from multiprocessing import Queue as multiprocQueue
 
 import pyaudio
 
@@ -27,8 +29,6 @@ class AudioSourceBase(object):
 
     """
     def __init__(self, rate=16000, chunksize=1024):
-        self._queue = multiprocessing.Queue()
-
         self.rate = rate
         self.chunksize = chunksize
 
@@ -60,17 +60,29 @@ class PyAudioMicrophoneSource(AudioSourceBase):
 
         self.saver = saver  # type: WaveFileSink
 
+        self._queue = threadedQueue()
+        self._worker = None  # type: Optional[Thread]
+
         self._stop = Event()
 
-    def start(self):
+    def open(self):
         self.stream = self._pyaudio.open(format=self.format,
                                          channels=self.channels,
                                          rate=self.rate,
                                          input=True,
                                          frames_per_buffer=self.chunksize)
 
+    def start(self):
+        # Start async process to put audio chunks in a queue
+        self._worker = Thread(target=self._listen)
+
+    def _listen(self):
+        while not self._stop.is_set():
+            chunk = self.stream.read(self.chunksize)
+            self._queue.put(chunk)
+
     def get_next_chunk(self, timeout):
-        chunk = self.stream.read(self.chunksize)
+        chunk = self._queue.get(block=True, timeout=1)
         if self.saver:
             self.saver.add_chunk(chunk)
         return chunk
@@ -79,6 +91,8 @@ class PyAudioMicrophoneSource(AudioSourceBase):
         self._stop.set()
 
         self.stream.stop_stream()
+
+    def close(self):
         self.stream.close()
         self._pyaudio.terminate()
 
