@@ -86,6 +86,7 @@ class Asr(object):
                         cb(decoded_string)
                 else:
                     raise RuntimeError("Decoding failed")
+        logging.info("Finalize was set, decoder loop stopped")
 
         for cb in self._string_fully_recognized_callbacks:
             cb(decoded_string)

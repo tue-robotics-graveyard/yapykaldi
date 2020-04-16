@@ -7,16 +7,39 @@ import pyaudio
 
 
 class AudioSourceBase(object):
+    """The AudioSource
+    It requires some setup before we can get audio bytes from it and
+    requires some teardown afterwards
+
+    The right order is:
+    1. source = AudioSourceBase()
+    2. source.open() # to open the file, connect the mic etc.
+    3. source.start()  # actually start getting audio data
+    4. source.get_next_chunk() # use the audio data
+    5. source.stop()  # Stop getting audio data
+    6. source.close( # Close the file
+
+    Some sources only support opening them once but
+        they should all support going through start, get.., stop
+        several times
+
+    """
     def __init__(self, rate=16000, chunksize=1024):
         self._queue = multiprocessing.Queue()
 
         self.rate = rate
         self.chunksize = chunksize
 
+    def open(self):
+        raise NotImplementedError()
+
     def start(self):
         raise NotImplementedError()
 
     def stop(self):
+        raise NotImplementedError()
+
+    def close(self):
         raise NotImplementedError()
 
     def get_next_chunk(self, timeout):
@@ -64,8 +87,11 @@ class PyAudioMicrophoneSource(AudioSourceBase):
 class WaveFileSource(AudioSourceBase):
     def __init__(self, filename, rate=16000, chunksize=1024):
         super(WaveFileSource, self).__init__(rate=rate, chunksize=chunksize)
+        self.filename = filename
 
-        self.wavf = wave.open(filename, 'rb')
+    def open(self):
+
+        self.wavf = wave.open(self.filename, 'rb')
         assert self.wavf.getnchannels() == 1
         assert self.wavf.getsampwidth() == 2
         assert self.wavf.getnframes() > 0
@@ -89,4 +115,7 @@ class WaveFileSource(AudioSourceBase):
             raise StopIteration()
 
     def stop(self):
+        pass
+
+    def close(self):
         self.wavf.close()
