@@ -10,6 +10,7 @@ import numpy as np
 from builtins import *
 
 from .nnet3 import KaldiNNet3OnlineDecoder, KaldiNNet3OnlineModel
+from .audio_handling.sources import AudioSourceBase
 
 logging.basicConfig(level=logging.DEBUG,
                     format='[%(asctime)s](%(processName)-9s) %(message)s',)
@@ -40,7 +41,7 @@ class Asr(object):
         self.model_dir = model_dir
         self.model_type = model_type
 
-        self.stream = stream  # type: AudioStreamer
+        self.stream = stream  # type: AudioSourceBase
 
         logging.info("KaldiNNet3OnlineModel initializing..")
         self.model = KaldiNNet3OnlineModel(self.model_dir)

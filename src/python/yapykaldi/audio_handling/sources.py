@@ -5,6 +5,8 @@ from multiprocessing import Event
 
 import pyaudio
 
+from .sinks import WaveFileSink
+
 
 class AudioSourceBase(object):
     """The AudioSource
@@ -56,7 +58,7 @@ class PyAudioMicrophoneSource(AudioSourceBase):
 
         self.stream = None
 
-        self.saver = saver  # type: AudioSaver
+        self.saver = saver  # type: WaveFileSink
 
         self._stop = Event()
 
