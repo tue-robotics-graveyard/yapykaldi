@@ -54,6 +54,8 @@ class Asr(object):
         self._string_partially_recognized_callbacks = []
         self._string_fully_recognized_callbacks = []
 
+        self.visualize_to_log = False
+
     def recognize(self):
         """Method to start the recognition process on audio stream added to process queue"""
 
@@ -77,7 +79,15 @@ class Asr(object):
                 logging.error(e)
                 break
             else:
-                logging.info("Recognizing chunk:")
+                viz_str = ''
+                if self.visualize_to_log:
+                    peak = np.average(np.abs(np.fromstring(chunk, dtype=np.int16))) * 2
+                    length = int(250 * peak / 2**16)
+                    bars = "-" * min(length, 79)
+                    if length >= 79:
+                        bars += '#'
+                    viz_str = "{}, {}".format(int(peak), bars)
+                logging.info("Recognizing chunk:{}".format(viz_str))
                 if decoder.decode(self.stream.rate,
                                   np.array(data, dtype=np.float32),
                                   self._finalize.is_set()):
