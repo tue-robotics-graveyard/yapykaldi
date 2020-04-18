@@ -1,8 +1,10 @@
+import logging
 import math
 import wave
 from threading import Event
 from threading import Thread
 from queue import Queue as threadedQueue
+from queue import Empty
 from multiprocessing import Queue as multiprocQueue
 
 import pyaudio
@@ -75,17 +77,23 @@ class PyAudioMicrophoneSource(AudioSourceBase):
     def start(self):
         # Start async process to put audio chunks in a queue
         self._worker = Thread(target=self._listen)
+        self._worker.start()
 
     def _listen(self):
         while not self._stop.is_set():
             chunk = self.stream.read(self.chunksize)
+            # logging.debug("{}\t+1 chunks in the queue".format(self._queue.qsize()))
             self._queue.put(chunk)
 
     def get_next_chunk(self, timeout):
-        chunk = self._queue.get(block=True, timeout=1)
-        if self.saver:
-            self.saver.add_chunk(chunk)
-        return chunk
+        try:
+            # logging.debug("{}\t-1 chunks in the queue".format(self._queue.qsize()))
+            chunk = self._queue.get(block=True, timeout=1)
+            if self.saver:
+                self.saver.add_chunk(chunk)
+            return chunk
+        except Empty:
+            raise StopIteration()
 
     def stop(self):
         self._stop.set()

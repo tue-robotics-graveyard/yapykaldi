@@ -76,7 +76,7 @@ class Asr(object):
                 logging.error(e)
                 self.stop()
             except Exception as e:
-                logging.error(e)
+                logging.error("Other exception happened", e)
                 break
             else:
                 viz_str = ''
@@ -114,8 +114,7 @@ class Asr(object):
         self._finalize.clear()
 
         self.stream.start()
-        self.recognize()
-        logging.info("Completed ASR")
+        logging.info("Started ASR")
 
     def register_partially_recognized_callback(self, callback):
         """
