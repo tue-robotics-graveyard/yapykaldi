@@ -14,6 +14,7 @@ from .audio_handling.sources import AudioSourceBase
 
 logging.basicConfig(level=logging.DEBUG,
                     format='[%(asctime)s](%(processName)-9s) %(message)s',)
+logger = logging.getLogger('yapykaldi')
 
 
 def makedir_exist_ok(dirpath):
@@ -43,9 +44,9 @@ class Asr(object):
 
         self.stream = stream  # type: AudioSourceBase
 
-        logging.info("KaldiNNet3OnlineModel initializing..")
+        logger.info("KaldiNNet3OnlineModel initializing..")
         self.model = KaldiNNet3OnlineModel(self.model_dir)
-        logging.info("KaldiNNet3OnlineModel initialized")
+        logger.info("KaldiNNet3OnlineModel initialized")
 
         self.timeout = timeout
 
@@ -62,9 +63,9 @@ class Asr(object):
         if self._finalize.is_set():
             raise Exception("Asr object not initialized for recognition")
 
-        logging.info("KaldiNNet3OnlineDecoder initializing...")
+        logger.info("KaldiNNet3OnlineDecoder initializing...")
         decoder = KaldiNNet3OnlineDecoder(self.model)
-        logging.info("KaldiNNet3OnlineDecoder initialized")
+        logger.info("KaldiNNet3OnlineDecoder initialized")
 
         decoded_string = ""
         while not self._finalize.is_set():
@@ -72,11 +73,11 @@ class Asr(object):
                 chunk = self.stream.get_next_chunk(self.timeout)
                 data = struct.unpack_from('<%dh' % self.stream.chunksize, chunk)
             except StopIteration as e:
-                logging.info("Stream reached it end")
-                logging.error(e)
+                logger.info("Stream reached it end")
+                logger.error(e)
                 self.stop()
             except Exception as e:
-                logging.error("Other exception happened", e)
+                logger.error("Other exception happened", e)
                 break
             else:
                 viz_str = ''
@@ -87,34 +88,34 @@ class Asr(object):
                     if length >= 79:
                         bars += '#'
                     viz_str = "{}, {}".format(int(peak), bars)
-                logging.info("Recognizing chunk:{}".format(viz_str))
+                logger.info("Recognizing chunk:{}".format(viz_str))
                 if decoder.decode(self.stream.rate,
                                   np.array(data, dtype=np.float32),
                                   self._finalize.is_set()):
                     decoded_string, likelihood = decoder.get_decoded_string()
-                    logging.info("** ({}): {}".format(likelihood, decoded_string))
+                    logger.info("** ({}): {}".format(likelihood, decoded_string))
                     for cb in self._string_partially_recognized_callbacks:
                         cb(decoded_string)
                 else:
                     raise RuntimeError("Decoding failed")
-        logging.info("Finalize was set, decoder loop stopped")
+        logger.info("Finalize was set, decoder loop stopped")
 
         for cb in self._string_fully_recognized_callbacks:
             cb(decoded_string)
 
     def stop(self):
-        logging.info("Stop ASR")
+        logger.info("Stop ASR")
         self._finalize.set()
         self.stream.stop()
 
     def start(self):
-        logging.info("Starting speech recognition")
+        logger.info("Starting speech recognition")
         # Reset internal states at the start of a new call
 
         self._finalize.clear()
 
         self.stream.start()
-        logging.info("Started ASR")
+        logger.info("Started ASR")
 
     def register_partially_recognized_callback(self, callback):
         """

@@ -12,6 +12,9 @@ import pyaudio
 from .sinks import WaveFileSink
 
 
+logger = logging.getLogger('yapykaldi')
+
+
 class AudioSourceBase(object):
     """The AudioSource
     It requires some setup before we can get audio bytes from it and
@@ -82,12 +85,12 @@ class PyAudioMicrophoneSource(AudioSourceBase):
     def _listen(self):
         while not self._stop.is_set():
             chunk = self.stream.read(self.chunksize)
-            # logging.debug("{}\t+1 chunks in the queue".format(self._queue.qsize()))
+            # logger.debug("{}\t+1 chunks in the queue".format(self._queue.qsize()))
             self._queue.put(chunk)
 
     def get_next_chunk(self, timeout):
         try:
-            # logging.debug("{}\t-1 chunks in the queue".format(self._queue.qsize()))
+            # logger.debug("{}\t-1 chunks in the queue".format(self._queue.qsize()))
             chunk = self._queue.get(block=True, timeout=1)
             if self.saver:
                 self.saver.add_chunk(chunk)

@@ -18,7 +18,6 @@ CHUNK = 1024
 logging.basicConfig(level=logging.INFO,
                     format='(%(processName)-9s) %(message)s',)
 
-
 def listen(q):
     global FINALIZE
     global CHUNK
