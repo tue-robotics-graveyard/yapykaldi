@@ -112,12 +112,15 @@ class PyAudioMicrophoneSource(AudioSourceBase):
             raise StopIteration()
 
     def stop(self):
-        logger.info("Set stop")
-        self._stop.set()
+        if not self._stop.is_set():
+            logger.info("Set stop")
+            self._stop.set()
 
-        logger.info("Joining worker thread")
-        self._worker.join()
-        logger.info("Joined worker thread")
+            logger.info("Joining worker thread")
+            self._worker.join()
+            logger.info("Joined worker thread")
+        else:
+            logger.info("Already set stop")
 
     def close(self):
         self._pyaudio.terminate()

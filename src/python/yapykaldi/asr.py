@@ -55,7 +55,7 @@ class Asr(object):
         self._string_partially_recognized_callbacks = []
         self._string_fully_recognized_callbacks = []
 
-        self.visualize_to_log = False
+        self.visualize_to_log = True
 
     def recognize(self):
         """Method to start the recognition process on audio stream added to process queue"""
