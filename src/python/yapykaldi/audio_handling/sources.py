@@ -3,6 +3,7 @@ import math
 import wave
 from threading import Event
 from threading import Thread
+
 from queue import Queue as threadedQueue
 from queue import Empty
 from multiprocessing import Queue as multiprocQueue
@@ -11,6 +12,10 @@ import pyaudio
 
 from .sinks import WaveFileSink
 
+try:
+    from typing import Optional
+except ImportError:
+    pass
 
 logger = logging.getLogger('yapykaldi')
 
@@ -61,7 +66,7 @@ class PyAudioMicrophoneSource(AudioSourceBase):
         self.format = fmt
         self.channels = channels
 
-        self.stream = None
+        self.stream = None  # type: Optional[pyaudio.PyAudio]
 
         self.saver = saver  # type: WaveFileSink
 
@@ -71,22 +76,30 @@ class PyAudioMicrophoneSource(AudioSourceBase):
         self._stop = Event()
 
     def open(self):
-        self.stream = self._pyaudio.open(format=self.format,
-                                         channels=self.channels,
-                                         rate=self.rate,
-                                         input=True,
-                                         frames_per_buffer=self.chunksize)
+        pass
 
     def start(self):
         # Start async process to put audio chunks in a queue
-        self._worker = Thread(target=self._listen)
+        self._stop.clear()
+        self._worker = Thread(target=self._listen, args=(self._stop,))
         self._worker.start()
 
-    def _listen(self):
-        while not self._stop.is_set():
-            chunk = self.stream.read(self.chunksize)
+    def _listen(self, stop_event):
+        stream = self._pyaudio.open(format=self.format,
+                                    channels=self.channels,
+                                    rate=self.rate,
+                                    input=True,
+                                    frames_per_buffer=self.chunksize)
+
+        while not stop_event.wait(0):
+            chunk = stream.read(self.chunksize)
             # logger.debug("{}\t+1 chunks in the queue".format(self._queue.qsize()))
             self._queue.put(chunk)
+        else:
+            logger.info("Stop is set")
+
+        stream.stop_stream()
+        stream.close()
 
     def get_next_chunk(self, timeout):
         try:
@@ -99,12 +112,14 @@ class PyAudioMicrophoneSource(AudioSourceBase):
             raise StopIteration()
 
     def stop(self):
+        logger.info("Set stop")
         self._stop.set()
 
-        self.stream.stop_stream()
+        logger.info("Joining worker thread")
+        self._worker.join()
+        logger.info("Joined worker thread")
 
     def close(self):
-        self.stream.close()
         self._pyaudio.terminate()
 
         if self.saver:
