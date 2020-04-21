@@ -5,11 +5,11 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 from builtins import *
 import argparse
 import os
-from yapykaldi.asr import Asr
 from threading import Event
+import signal
+from yapykaldi.asr import Asr
 from yapykaldi.audio_handling.sinks import WaveFileSink
 from yapykaldi.audio_handling.sources import PyAudioMicrophoneSource, WaveFileSource
-import signal
 
 model_dir = "../data/kaldi-generic-en-tdnn_fl-latest"
 model_type = "nnet3"
