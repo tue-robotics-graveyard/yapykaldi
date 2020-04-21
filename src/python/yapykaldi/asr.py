@@ -107,20 +107,15 @@ class Asr(object):
         self.stream.start()
         logger.info("Started ASR")
 
-    def register_partially_recognized_callback(self, callback):
+    def register_callback(self, callback, partial=False):
         """
-        Register a callback to receive a partially decoded string, when the utterance is still incomplete.
+        Register a callback to receive the decoded string both partial and complete.
 
         :param callback: a function taking a single string as it's parameter
+        :param partial: (default False) flag to set callback for partial recognitions
         :return: None
         """
-        self._string_partially_recognized_callbacks += [callback]
-
-    def register_fully_recognized_callback(self, callback):
-        """
-        Register a callback to receive the completed utterance, when there is no more text to be recognized.
-
-        :param callback: a function taking a single string as it's parameter
-        :return: None
-        """
-        self._string_fully_recognized_callbacks += [callback]
+        if partial:
+            self._string_partially_recognized_callbacks += [callback]
+        else:
+            self._string_fully_recognized_callbacks += [callback]
