@@ -157,11 +157,8 @@ class WaveFileSource(AudioSourceBase):
             frames = self.wavf.readframes(self.chunksize)
             self.read_chunks += 1
             return frames
-        else:
-            raise StopIteration()
 
-    def stop(self):
-        pass
+        raise StopIteration()
 
     def close(self):
         self.wavf.close()
