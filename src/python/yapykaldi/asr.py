@@ -2,7 +2,7 @@ from __future__ import (print_function, division, absolute_import, unicode_liter
 from builtins import *
 import logging
 import struct
-from multiprocessing import Event
+from threading import Event
 
 import numpy as np
 
