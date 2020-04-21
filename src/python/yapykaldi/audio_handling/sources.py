@@ -162,3 +162,7 @@ class WaveFileSource(AudioSourceBase):
 
     def close(self):
         self.wavf.close()
+        self.wavf = None
+        self.total_num_frames = None
+        self.total_chunks = None
+        self.read_chunks = None
