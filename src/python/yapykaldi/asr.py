@@ -105,7 +105,6 @@ class Asr(object):
         self._finalize.clear()
 
         self.stream.start()
-        logger.info("Started ASR")
 
     def register_callback(self, callback, partial=False):
         """
