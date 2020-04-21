@@ -1,13 +1,10 @@
 from __future__ import (print_function, division, absolute_import, unicode_literals)
-
-import errno
+from builtins import *
 import logging
-import os
 import struct
 from multiprocessing import Event
 
 import numpy as np
-from builtins import *
 
 from .nnet3 import KaldiNNet3OnlineDecoder, KaldiNNet3OnlineModel
 from .audio_handling.sources import AudioSourceBase
@@ -16,18 +13,6 @@ logging.basicConfig(level=logging.DEBUG,
                     format='[%(asctime)s](%(processName)-9s) %(message)s',)
 logger = logging.getLogger('yapykaldi')
 
-
-def makedir_exist_ok(dirpath):
-    """
-    Python2 support for os.makedirs(.., exist_ok=True)
-    """
-    try:
-        os.makedirs(dirpath)
-    except OSError as e:
-        if e.errno == errno.EEXIST:
-            pass
-        else:
-            raise
 
 
 class Asr(object):
