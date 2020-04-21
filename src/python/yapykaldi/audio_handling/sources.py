@@ -38,6 +38,7 @@ class AudioSourceBase(object):
         several times
 
     """
+
     def __init__(self, rate=16000, chunksize=1024):
         self.rate = rate
         self.chunksize = chunksize

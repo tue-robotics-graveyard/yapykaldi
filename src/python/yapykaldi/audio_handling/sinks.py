@@ -5,6 +5,7 @@ import pyaudio
 
 class WaveFileSink(object):
     """WaveFileSink class"""
+
     def __init__(self, wavpath, fmt=pyaudio.paInt16, channels=1, rate=16000, chunk=1024):
         """
 
