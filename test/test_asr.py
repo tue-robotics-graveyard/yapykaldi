@@ -1,4 +1,8 @@
 #! /usr/bin/env python
+"""Test script for ASR api"""
+
+from __future__ import print_function, division, absolute_import, unicode_literals
+from builtins import *
 import argparse
 import os
 from yapykaldi.asr import Asr
