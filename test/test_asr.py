@@ -43,16 +43,9 @@ def output_str(string):
     print("Heard '{}'".format(string))
 
 
-asr.register_partially_recognized_callback(output_str)
-asr.register_fully_recognized_callback(output_str)
-
-
 def got_complete_str(string):
     print("Heard complete '{}'".format(string))
     stop.set()
-
-
-asr.register_fully_recognized_callback(got_complete_str)
 
 
 def interrupt_handle(sig, frame):
@@ -62,13 +55,13 @@ def interrupt_handle(sig, frame):
     asr.stop()
 
 
+asr.register_callback(output_str, partial=True)
+asr.register_callback(got_complete_str)
+
 # Handle interrupt
 signal.signal(signal.SIGINT, interrupt_handle)
 
 asr.start()
-print("ASR started")
-
-print("ASR going to recognize something")
 asr.recognize()
 print("ASR recognized something")
 
