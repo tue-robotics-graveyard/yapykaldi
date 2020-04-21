@@ -132,6 +132,10 @@ class WaveFileSource(AudioSourceBase):
     def __init__(self, filename, rate=16000, chunksize=1024):
         super(WaveFileSource, self).__init__(rate=rate, chunksize=chunksize)
         self.filename = filename
+        self.wavf = None
+        self.total_num_frames = None
+        self.total_chunks = None
+        self.read_chunks = None
 
     def open(self):
 
@@ -141,19 +145,16 @@ class WaveFileSource(AudioSourceBase):
         assert self.wavf.getnframes() > 0
 
         self._frame_rate = self.wavf.getframerate()
-        self.total_num_frames = None
-        self.total_chunks = None
-        self.read_chuncks = None
 
     def start(self):
         self.total_num_frames = self.wavf.getnframes()
         self.total_chunks = math.floor(self.total_num_frames / self.chunksize)
-        self.read_chuncks = 0
+        self.read_chunks = 0
 
     def get_next_chunk(self, timeout):
-        if self.read_chuncks < self.total_chunks:
+        if self.read_chunks < self.total_chunks:
             frames = self.wavf.readframes(self.chunksize)
-            self.read_chuncks += 1
+            self.read_chunks += 1
             return frames
         else:
             raise StopIteration()
