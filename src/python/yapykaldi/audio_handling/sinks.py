@@ -1,9 +1,10 @@
+"""Audio sinks supported by Yapykaldi"""
 import wave
-
 import pyaudio
 
 
 class WaveFileSink(object):
+    """WaveFileSink class"""
     def __init__(self, wavpath, fmt=pyaudio.paInt16, channels=1, rate=16000, chunk=1024):
         """
 
@@ -22,10 +23,18 @@ class WaveFileSink(object):
 
         self.frames = []
 
-    def add_chunk(self, chunk):
-        self.frames += chunk
+    def add_chunk(self, frames):
+        """Add frame chunk to the WaveFileSink object
+
+        :param frames: audio frames to be added to the sink object
+        """
+        self.frames += frames
 
     def write_frames(self, frames=None):
+        """Write audio frames into a file
+
+        :param frames: (default None) Frames to write to a file. This bypasses the frames stored in the sink object.
+        """
         wav_out = wave.open(self.wavpath, 'wb')
         wav_out.setnchannels(self.channels)
         wav_out.setsampwidth(self._pyaudio.get_sample_size(self.format))
