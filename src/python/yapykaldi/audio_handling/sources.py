@@ -139,10 +139,11 @@ class WaveFileSource(AudioSourceBase):
 
     def open(self):
 
-        self.wavf = wave.open(self.filename, 'rb')
-        assert self.wavf.getnchannels() == 1
-        assert self.wavf.getsampwidth() == 2
-        assert self.wavf.getnframes() > 0
+        if not self.wavf:
+            self.wavf = wave.open(self.filename, 'rb')
+            assert self.wavf.getnchannels() == 1
+            assert self.wavf.getsampwidth() == 2
+            assert self.wavf.getnframes() > 0
 
         self._frame_rate = self.wavf.getframerate()
 
