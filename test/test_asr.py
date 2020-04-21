@@ -41,6 +41,8 @@ asr = Asr(model_dir, model_type, streamer)
 
 def output_str(string):
     print("Heard '{}'".format(string))
+
+
 asr.register_partially_recognized_callback(output_str)
 asr.register_fully_recognized_callback(output_str)
 
@@ -48,6 +50,8 @@ asr.register_fully_recognized_callback(output_str)
 def got_complete_str(string):
     print("Heard complete '{}'".format(string))
     stop.set()
+
+
 asr.register_fully_recognized_callback(got_complete_str)
 
 
@@ -56,6 +60,7 @@ def interrupt_handle(sig, frame):
     print("Stopping ASR")
     stop.set()
     asr.stop()
+
 
 # Handle interrupt
 signal.signal(signal.SIGINT, interrupt_handle)
@@ -67,7 +72,7 @@ print("ASR going to recognize something")
 asr.recognize()
 print("ASR recognized something")
 
-print ("Waiting for you to stop")
+print("Waiting for you to stop")
 stop.wait()
 
 asr.stop()
@@ -78,5 +83,3 @@ print("Stream stopped")
 
 streamer.close()
 print("Stream closed")
-
-
