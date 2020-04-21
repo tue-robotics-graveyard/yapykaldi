@@ -65,7 +65,7 @@ class Asr(object):
                 logger.error(e)
                 self.stop()
             except Exception as e:
-                logger.error("Other exception happened", e)
+                logger.error("Other exception happened: %s", e)
                 break
             else:
                 viz_str = ''
@@ -76,12 +76,12 @@ class Asr(object):
                     if length >= 79:
                         bars += '#'
                     viz_str = "{}, {}".format(int(peak), bars)
-                logger.info("Recognizing chunk:{}".format(viz_str))
+                logger.info("Recognizing chunk: %s", viz_str)
                 if decoder.decode(self.stream.rate,
                                   np.array(data, dtype=np.float32),
                                   self._finalize.is_set()):
                     decoded_string, likelihood = decoder.get_decoded_string()
-                    logger.info("** ({}): {}".format(likelihood, decoded_string))
+                    logger.info("** (%s): %s", likelihood, decoded_string)
                     for cb in self._string_partially_recognized_callbacks:
                         cb(decoded_string)
                 else:
