@@ -101,10 +101,10 @@ class PyAudioMicrophoneSource(AudioSourceBase):
         stream.close()
         logger.info("Audio stream stopped")
 
-    def get_next_chunk(self, timeout):
+    def get_next_chunk(self, timeout=1):
         try:
             # logger.debug("{}\t-1 chunks in the queue".format(self._queue.qsize()))
-            chunk = self._queue.get(block=True, timeout=1)
+            chunk = self._queue.get(block=True, timeout=timeout)
             if self.saver:
                 self.saver.add_chunk(chunk)
             return chunk
