@@ -7,6 +7,7 @@ from threading import Event
 import numpy as np
 
 from .nnet3 import KaldiNNet3OnlineDecoder, KaldiNNet3OnlineModel
+from .gmm import KaldiGmmOnlineDecoder, KaldiGmmOnlineModel
 from .audio_handling.sources import AudioSourceBase
 
 logging.basicConfig(level=logging.DEBUG,
@@ -14,6 +15,8 @@ logging.basicConfig(level=logging.DEBUG,
 logger = logging.getLogger('yapykaldi')
 
 
+ONLINE_MODELS = {'nnet3': KaldiNNet3OnlineModel, 'gmm': KaldiGmmOnlineModel}
+ONLINE_DECODERS = {'nnet3': KaldiNNet3OnlineDecoder, 'gmm': KaldiGmmOnlineDecoder}
 
 class Asr(object):
     """API for ASR"""
@@ -29,9 +32,9 @@ class Asr(object):
 
         self.stream = stream  # type: AudioSourceBase
 
-        logger.info("KaldiNNet3OnlineModel initializing..")
-        self.model = KaldiNNet3OnlineModel(self.model_dir)
-        logger.info("KaldiNNet3OnlineModel initialized")
+        logger.info("Trying to initialize %s model from %s", self.model_type, self.model_dir)
+        self.model = ONLINE_MODELS[self.model_type](self.model_dir)
+        logger.info("Successfully initialized %s model from %s", self.model_type, self.model_dir)
 
         self.timeout = timeout
 
@@ -48,9 +51,9 @@ class Asr(object):
         if self._finalize.is_set():
             raise Exception("Asr object not initialized for recognition")
 
-        logger.info("KaldiNNet3OnlineDecoder initializing...")
-        decoder = KaldiNNet3OnlineDecoder(self.model)
-        logger.info("KaldiNNet3OnlineDecoder initialized")
+        logger.info("Trying to initialize %s model decoder", self.model_type)
+        decoder = ONLINE_DECODERS[self.model_type](self.model)
+        logger.info("Successfully initialized %s model decoder", self.model_type)
 
         decoded_string = ""
         while not self._finalize.is_set():
