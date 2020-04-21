@@ -6,7 +6,6 @@ from threading import Thread
 
 from queue import Queue as threadedQueue
 from queue import Empty
-from multiprocessing import Queue as multiprocQueue
 
 import pyaudio
 
