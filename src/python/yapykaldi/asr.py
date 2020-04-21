@@ -92,11 +92,13 @@ class Asr(object):
             cb(decoded_string)
 
     def stop(self):
+        """Stop ASR process"""
         logger.info("Stop ASR")
         self._finalize.set()
         self.stream.stop()
 
     def start(self):
+        """Begin ASR process"""
         logger.info("Starting speech recognition")
         # Reset internal states at the start of a new call
 
