@@ -1,3 +1,4 @@
+"""Audio sources supported by Yapykaldi"""
 import logging
 import math
 import wave
@@ -22,11 +23,11 @@ class AudioSourceBase(object):
 
     The right order is:
     1. source = AudioSourceBase()
-    2. source.open() # to open the file, connect the mic etc.
-    3. source.start()  # actually start getting audio data
-    4. source.get_next_chunk() # use the audio data
-    5. source.stop()  # Stop getting audio data
-    6. source.close( # Close the file
+    2. source.open()                # to open the file, connect the mic etc.
+    3. source.start()               # actually start getting audio data
+    4. source.get_next_chunk()      # use the audio data
+    5. source.stop()                # stop getting audio data
+    6. source.close()               # close the file
 
     Some sources only support opening them once but
         they should all support going through start, get.., stop
