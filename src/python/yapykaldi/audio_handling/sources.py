@@ -1,12 +1,8 @@
 import logging
 import math
 import wave
-from threading import Event
-from threading import Thread
-
-from queue import Queue as threadedQueue
-from queue import Empty
-
+from threading import Event, Thread
+from queue import Empty, Queue
 import pyaudio
 
 from .sinks import WaveFileSink
@@ -70,7 +66,7 @@ class PyAudioMicrophoneSource(AudioSourceBase):
 
         self.saver = saver  # type: WaveFileSink
 
-        self._queue = threadedQueue()
+        self._queue = Queue()
         self._worker = None  # type: Optional[Thread]
 
         self._stop = Event()
