@@ -135,14 +135,14 @@ class WaveFileSource(AudioSourceBase):
         self.read_chunks = None
 
     def open(self):
-
         if not self.wavf:
             self.wavf = wave.open(self.filename, 'rb')
             assert self.wavf.getnchannels() == 1
             assert self.wavf.getsampwidth() == 2
             assert self.wavf.getnframes() > 0
-
-        self._frame_rate = self.wavf.getframerate()
+            assert self.wavf.getframerate() == self.rate
+        else:
+            raise RuntimeWarning("File already open")
 
     def start(self):
         self.total_num_frames = self.wavf.getnframes()
