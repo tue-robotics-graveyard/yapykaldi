@@ -82,6 +82,7 @@ class PyAudioMicrophoneSource(AudioSourceBase):
         # Start async process to put audio chunks in a queue
         self._stop.clear()
         self._worker = Thread(target=self._listen, args=(self._stop,))
+        logger.info("Starting audio stream in a separate thread")
         self._worker.start()
 
     def _listen(self, stop_event):
@@ -95,11 +96,10 @@ class PyAudioMicrophoneSource(AudioSourceBase):
             chunk = stream.read(self.chunksize)
             # logger.debug("{}\t+1 chunks in the queue".format(self._queue.qsize()))
             self._queue.put(chunk)
-        else:
-            logger.info("Stop is set")
 
         stream.stop_stream()
         stream.close()
+        logger.info("Audio stream stopped")
 
     def get_next_chunk(self, timeout):
         try:
@@ -113,14 +113,13 @@ class PyAudioMicrophoneSource(AudioSourceBase):
 
     def stop(self):
         if not self._stop.is_set():
-            logger.info("Set stop")
             self._stop.set()
 
-            logger.info("Joining worker thread")
+            logger.info("Waiting for audio stream to stop")
             self._worker.join()
-            logger.info("Joined worker thread")
+            logger.info("Exited audio stream thread")
         else:
-            logger.info("Already set stop")
+            logger.info("No running audio stream to stop")
 
     def close(self):
         self._pyaudio.terminate()
