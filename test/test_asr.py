@@ -5,7 +5,6 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 from builtins import *
 import argparse
 import os
-from threading import Event
 import signal
 from yapykaldi.asr import Asr
 from yapykaldi.audio_handling.sinks import WaveFileSink
@@ -31,8 +30,6 @@ elif args.live:
 else:
     raise Exception("Specify either --live or --file=audio.wav")
 
-stop = Event()
-
 streamer.open()
 
 asr = Asr(model_dir, model_type, streamer)
@@ -45,12 +42,10 @@ def output_str(string):
 
 def got_complete_str(string):
     print("Heard complete '{}'".format(string))
-    stop.set()
 
 
 def interrupt_handle(sig, frame):
     """Interrupt handler that sets the flag to stop recognition and close audio stream"""
-    stop.set()
     asr.stop()
 
 
@@ -62,6 +57,5 @@ signal.signal(signal.SIGINT, interrupt_handle)
 
 asr.start()
 asr.recognize()
-stop.wait()
 
 streamer.close()
