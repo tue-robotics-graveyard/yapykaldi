@@ -7,8 +7,7 @@ import argparse
 import os
 import signal
 from yapykaldi.asr import Asr
-from yapykaldi.audio_handling.sinks import WaveFileSink
-from yapykaldi.audio_handling.sources import PyAudioMicrophoneSource, WaveFileSource
+from yapykaldi.io import PyAudioMicrophoneSource, WaveFileSource, WaveFileSink
 
 model_dir = "../data/kaldi-generic-en-tdnn_fl-latest"
 model_type = "nnet3"
