@@ -34,13 +34,13 @@ else:
 stop = Event()
 
 streamer.open()
-print("Stream opened")
 
 asr = Asr(model_dir, model_type, streamer)
 
 
 def output_str(string):
-    print("Heard '{}'".format(string))
+    print("Heard '{}'\n".format(string))
+    print("ASR recognized something. Press [Ctrl+C] to stop...")
 
 
 def got_complete_str(string):
@@ -50,7 +50,6 @@ def got_complete_str(string):
 
 def interrupt_handle(sig, frame):
     """Interrupt handler that sets the flag to stop recognition and close audio stream"""
-    print("Stopping ASR")
     stop.set()
     asr.stop()
 
@@ -63,16 +62,8 @@ signal.signal(signal.SIGINT, interrupt_handle)
 
 asr.start()
 asr.recognize()
-print("ASR recognized something")
-
-print("Waiting for you to stop")
 stop.wait()
-
 asr.stop()
-print("ASR stopped")
-
 streamer.stop()
-print("Stream stopped")
 
 streamer.close()
-print("Stream closed")
