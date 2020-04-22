@@ -29,7 +29,9 @@ class WaveFileSink(object):
 
         :param frames: audio frames to be added to the sink object
         """
-        self.frames += frames
+        # Only append method works for both python 2 and 3
+        # List concatenation does not work as it converts byte strings to int
+        self.frames.append(frames)
 
     def write_frames(self, frames=None):
         """Write audio frames into a file
