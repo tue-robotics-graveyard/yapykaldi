@@ -63,7 +63,5 @@ signal.signal(signal.SIGINT, interrupt_handle)
 asr.start()
 asr.recognize()
 stop.wait()
-asr.stop()
-streamer.stop()
 
 streamer.close()
