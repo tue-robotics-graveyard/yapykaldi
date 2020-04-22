@@ -1,3 +1,6 @@
+"""
+Yapykaldi ASR: Class definition for ASR component. It connects to a source and an optional sink
+"""
 from __future__ import (print_function, division, absolute_import, unicode_literals)
 from builtins import *
 import logging
@@ -18,8 +21,11 @@ logger = logging.getLogger('yapykaldi')
 ONLINE_MODELS = {'nnet3': KaldiNNet3OnlineModel, 'gmm': KaldiGmmOnlineModel}
 ONLINE_DECODERS = {'nnet3': KaldiNNet3OnlineDecoder, 'gmm': KaldiGmmOnlineDecoder}
 
+
 class Asr(object):
     """API for ASR"""
+    # pylint: disable=too-many-instance-attributes, useless-object-inheritance
+
     def __init__(self, model_dir, model_type, stream, timeout=2):
         """
         :param model_dir: Path to model directory
