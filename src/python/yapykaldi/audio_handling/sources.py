@@ -73,6 +73,7 @@ class PyAudioMicrophoneSource(AudioSourceBase):
         self._stop = Event()
 
     def open(self):
+        # This function is needed to maintain generality in api of stream sources
         pass
 
     def start(self):
@@ -156,6 +157,10 @@ class WaveFileSource(AudioSourceBase):
             return frames
 
         raise StopIteration()
+
+    def stop(self):
+        # This function is needed to maintain generality in api of stream sources
+        pass
 
     def close(self):
         self.wavf.close()
