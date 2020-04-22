@@ -97,7 +97,7 @@ class PyAudioMicrophoneSource(AudioSourceBase):
 
         stream.stop_stream()
         stream.close()
-        logger.info("Audio stream stopped")
+        logger.info("Stopped streaming audio")
 
     def get_next_chunk(self, timeout=1):
         try:
@@ -142,8 +142,9 @@ class WaveFileSource(AudioSourceBase):
             assert self.wavf.getsampwidth() == 2
             assert self.wavf.getnframes() > 0
             assert self.wavf.getframerate() == self.rate
+            logger.info("Stream opened from %s", self.filename)
         else:
-            raise RuntimeWarning("File already open")
+            logger.error("Stream already open from %s. Call the close() method first", self.filename)
 
     def start(self):
         self.total_num_frames = self.wavf.getnframes()
@@ -164,6 +165,8 @@ class WaveFileSource(AudioSourceBase):
 
     def close(self):
         self.wavf.close()
+        logger.info("Stream closed from %s", self.filename)
+
         self.wavf = None
         self.total_num_frames = None
         self.total_chunks = None
