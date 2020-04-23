@@ -35,8 +35,8 @@ else:
 
 streamer.open()
 
-# Remove the log args to reduce verbosity
-asr = Asr(model_dir, model_type, streamer, log_decoded=True, log_decoded_partial=True)
+# Remove the debug arg to reduce verbosity
+asr = Asr(model_dir, model_type, streamer, debug=True)
 
 
 def output_str(string):
