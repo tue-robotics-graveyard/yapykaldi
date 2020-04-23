@@ -72,6 +72,13 @@ class WaveFileSink(AudioSinkBase):
         # List concatenation does not work as it converts byte strings to int
         self.frames.append(frames)
 
+    def open(self):
+        if not self._wavf:
+            self._wavf = wave.open(self.wavpath, 'wb')
+            self._wavf.setnchannels(self.channels)
+            self._wavf.setsampwidth(self._pyaudio.get_sample_size(self.format))
+            self._wavf.setframerate(self.rate)
+
     def write_frames(self, frames=None):
         """Write audio frames into a file
 
