@@ -20,12 +20,14 @@ class Asr(object):
     """API for ASR"""
     # pylint: disable=too-many-instance-attributes, useless-object-inheritance
 
-    def __init__(self, model_dir, model_type, stream, timeout=2):
+    def __init__(self, model_dir, model_type, stream, timeout=2, log_decoded=False, log_decoded_partial=False):
         """
         :param model_dir: Path to model directory
         :param model_type: Type of ASR model 'nnet3' or 'hmm'
         :param timeout: (default 2) Time to wait for a new data buffer before stopping recognition due to unavailability
         of data
+        :param log_decoded: (default False) Flag to set logger to log decoded string and likelihood
+        :param log_decoded_partial: (default False) Flag to set logger to log partially decoded string and likelihood
         """
         self.model_dir = model_dir
         self.model_type = model_type
@@ -43,7 +45,8 @@ class Asr(object):
         self._string_partially_recognized_callbacks = []
         self._string_fully_recognized_callbacks = []
 
-        self.visualize_to_log = True
+        self._log_decoded = log_decoded
+        self._log_decoded_partial = log_decoded_partial
 
     def recognize(self):
         """Method to start the recognition process on audio stream added to process queue"""
@@ -69,27 +72,35 @@ class Asr(object):
                 break
             else:
                 viz_str = ''
-                if self.visualize_to_log:
+                if self._log_decoded_partial:
                     peak = np.average(np.abs(np.fromstring(chunk, dtype=np.int16))) * 2
                     length = int(250 * peak / 2**16)
                     bars = "-" * min(length, 79)
                     if length >= 79:
                         bars += '#'
                     viz_str = "{}, {}".format(int(peak), bars)
-                logger.info("Recognizing chunk: %s", viz_str)
+                    logger.info("Recognizing chunk: %s", viz_str)
+
                 if decoder.decode(self.stream.rate,
                                   np.array(data, dtype=np.float32),
                                   self._finalize.is_set()):
                     decoded_string, likelihood = decoder.get_decoded_string()
-                    logger.info("** (%s): %s", likelihood, decoded_string)
-                    for cb in self._string_partially_recognized_callbacks:
-                        cb(decoded_string)
+
+                    if self._log_decoded_partial:
+                        logger.info("Partially decoded (%s): %s", likelihood, decoded_string)
+
+                    for callback in self._string_partially_recognized_callbacks:
+                        callback(decoded_string)
                 else:
                     raise RuntimeError("Decoding failed")
-        logger.info("Finalize was set, decoder loop stopped")
 
-        for cb in self._string_fully_recognized_callbacks:
-            cb(decoded_string)
+        logger.info("Decoding of input stream is complete")
+
+        if self._log_decoded:
+            logger.info("Decoded result (%s): %s", likelihood, decoded_string)
+
+        for callback in self._string_fully_recognized_callbacks:
+            callback(decoded_string)
 
     def stop(self):
         """Stop ASR process"""
