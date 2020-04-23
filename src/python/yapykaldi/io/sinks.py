@@ -1,6 +1,48 @@
 """Audio sinks supported by Yapykaldi"""
+from __future__ import absolute_import, division, print_function, unicode_literals
+from builtins import *
 import wave
 import pyaudio
+
+
+class AudioSinkBase(object):
+    """The AudioSink
+    It requires some setup before we can get audio bytes from it and
+    requires some teardown afterwards
+
+    The right order is:
+    1. source = AudioSinkBase()
+    2. source.open()                # to open the file, connect the mic etc.
+    3. source.start()               # actually start getting audio data
+    4. source.get_chunk()           # use the audio data
+    5. source.stop()                # stop getting audio data
+    6. source.close()               # close the file
+
+    Some sinks only support opening them once but they should all support
+    going through start, get.., stop several times
+
+    """
+    # pylint: disable=useless-object-inheritance
+
+    def __init__(self, rate=16000, chunksize=1024, fmt=pyaudio.paInt16):
+        self.rate = rate
+        self.chunksize = chunksize
+        self.format = fmt
+
+    def open(self):
+        raise NotImplementedError()
+
+    def start(self):
+        raise NotImplementedError()
+
+    def stop(self):
+        raise NotImplementedError()
+
+    def close(self):
+        raise NotImplementedError()
+
+    def add_chunk(self):
+        raise NotImplementedError()
 
 
 class WaveFileSink(object):
