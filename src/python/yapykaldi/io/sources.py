@@ -59,6 +59,13 @@ class AudioSourceBase(object):
 
 class PyAudioMicrophoneSource(AudioSourceBase):
     def __init__(self, fmt=pyaudio.paInt16, channels=1, rate=16000, chunksize=1024, saver=None):
+        """
+        :param fmt: (default pyaudio.paInt16) format of the audio data
+        :param channels: (default 1) number of channels in audio data
+        :param rate: (default 16000) sampling frequency of audio data
+        :param chunksize: (default 1024) size of audio data buffer
+        :param saver: (default None) audio sink object
+        """
         super().__init__(rate=rate, chunksize=chunksize)
 
         self._pyaudio = pyaudio.PyAudio()
@@ -130,6 +137,12 @@ class PyAudioMicrophoneSource(AudioSourceBase):
 
 class WaveFileSource(AudioSourceBase):
     def __init__(self, filename, rate=16000, chunksize=1024):
+        """
+        :param filename: path to the wave file
+        :type filename: str
+        :param rate: (default 16000) sampling frequency of audio data
+        :param chunksize: (default 1024) size of audio data buffer
+        """
         super().__init__(rate=rate, chunksize=chunksize)
         self.filename = filename
         self.wavf = None
