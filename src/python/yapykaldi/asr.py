@@ -62,7 +62,7 @@ class Asr(object):
         while not self._finalize.is_set():
             try:
                 chunk = self.stream.get_next_chunk(self.timeout)
-                data = struct.unpack_from('<%dh' % self.stream.chunksize, chunk)
+                data = np.array(struct.unpack_from('<%dh' % self.stream.chunksize, chunk), dtype=np.float32)
             except StopIteration as e:  # pylint: disable=invalid-name
                 logger.info("Stream reached it end")
                 logger.error(e)
@@ -81,9 +81,7 @@ class Asr(object):
                     viz_str = "{}, {}".format(int(peak), bars)
                     logger.info("Recognizing chunk: %s", viz_str)
 
-                if decoder.decode(self.stream.rate,
-                                  np.array(data, dtype=np.float32),
-                                  self._finalize.is_set()):
+                if decoder.decode(self.stream.rate, data, self._finalize.is_set()):
                     decoded_string, likelihood = decoder.get_decoded_string()
 
                     if self._log_decoded_partial:
