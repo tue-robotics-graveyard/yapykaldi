@@ -10,6 +10,7 @@ from .logger import logger
 from .nnet3 import KaldiNNet3OnlineDecoder, KaldiNNet3OnlineModel
 from .gmm import KaldiGmmOnlineDecoder, KaldiGmmOnlineModel
 from .io import AudioSourceBase
+from .utils import volume_indicator
 
 
 ONLINE_MODELS = {'nnet3': KaldiNNet3OnlineModel, 'gmm': KaldiGmmOnlineModel}
@@ -20,14 +21,13 @@ class Asr(object):
     """API for ASR"""
     # pylint: disable=too-many-instance-attributes, useless-object-inheritance
 
-    def __init__(self, model_dir, model_type, stream, timeout=2, log_decoded=False, log_decoded_partial=False):
+    def __init__(self, model_dir, model_type, stream, timeout=2, debug=False):
         """
         :param model_dir: Path to model directory
         :param model_type: Type of ASR model 'nnet3' or 'hmm'
         :param timeout: (default 2) Time to wait for a new data buffer before stopping recognition due to unavailability
         of data
-        :param log_decoded: (default False) Flag to set logger to log decoded string and likelihood
-        :param log_decoded_partial: (default False) Flag to set logger to log partially decoded string and likelihood
+        :param debug: (default False) Flag to set logger to log audio chunk volume and partially decoded string and likelihood
         """
         self.model_dir = model_dir
         self.model_type = model_type
@@ -45,8 +45,7 @@ class Asr(object):
         self._string_partially_recognized_callbacks = []
         self._string_fully_recognized_callbacks = []
 
-        self._log_decoded = log_decoded
-        self._log_decoded_partial = log_decoded_partial
+        self._debug = debug
 
     def recognize(self):
         """Method to start the recognition process on audio stream added to process queue"""
@@ -71,20 +70,12 @@ class Asr(object):
                 logger.error("Other exception happened: %s", e)
                 break
             else:
-                viz_str = ''
-                if self._log_decoded_partial:
-                    peak = np.average(np.abs(np.fromstring(chunk, dtype=np.int16))) * 2
-                    length = int(250 * peak / 2**16)
-                    bars = "-" * min(length, 79)
-                    if length >= 79:
-                        bars += '#'
-                    viz_str = "{}, {}".format(int(peak), bars)
-                    logger.info("Recognizing chunk: %s", viz_str)
-
                 if decoder.decode(self.stream.rate, data, self._finalize.is_set()):
                     decoded_string, likelihood = decoder.get_decoded_string()
 
-                    if self._log_decoded_partial:
+                    if self._debug:
+                        chunk_volume_level = volume_indicator(data)
+                        logger.info("Chunk volume level: %s", chunk_volume_level)
                         logger.info("Partially decoded (%s): %s", likelihood, decoded_string)
 
                     for callback in self._string_partially_recognized_callbacks:
@@ -93,9 +84,7 @@ class Asr(object):
                     raise RuntimeError("Decoding failed")
 
         logger.info("Decoding of input stream is complete")
-
-        if self._log_decoded:
-            logger.info("Decoded result (%s): %s", likelihood, decoded_string)
+        logger.info("Final result (%s): %s", likelihood, decoded_string)
 
         for callback in self._string_fully_recognized_callbacks:
             callback(decoded_string)
