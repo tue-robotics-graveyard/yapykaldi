@@ -25,9 +25,11 @@ class Asr(object):
         """
         :param model_dir: Path to model directory
         :param model_type: Type of ASR model 'nnet3' or 'hmm'
+        :param stream: Audio source object
         :param timeout: (default 2) Time to wait for a new data buffer before stopping recognition due to unavailability
         of data
-        :param debug: (default False) Flag to set logger to log audio chunk volume and partially decoded string and likelihood
+        :param debug: (default False) Flag to set logger to log audio chunk volume and partially decoded string and
+        likelihood
         """
         self.model_dir = model_dir
         self.model_type = model_type
