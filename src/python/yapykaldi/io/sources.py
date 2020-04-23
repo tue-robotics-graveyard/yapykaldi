@@ -34,6 +34,7 @@ class AudioSourceBase(object):
         several times
 
     """
+    # pylint: disable=useless-object-inheritance
 
     def __init__(self, rate=16000, chunksize=1024):
         self.rate = rate
