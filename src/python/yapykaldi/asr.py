@@ -63,11 +63,11 @@ class Asr(object):
             try:
                 chunk = self.stream.get_next_chunk(self.timeout)
                 data = struct.unpack_from('<%dh' % self.stream.chunksize, chunk)
-            except StopIteration as e:
+            except StopIteration as e:  # pylint: disable=invalid-name
                 logger.info("Stream reached it end")
                 logger.error(e)
                 self.stop()
-            except Exception as e:
+            except Exception as e:  # pylint: disable=invalid-name, broad-except
                 logger.error("Other exception happened: %s", e)
                 break
             else:
