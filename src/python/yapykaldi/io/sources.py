@@ -1,4 +1,6 @@
 """Audio sources supported by Yapykaldi"""
+from __future__ import print_function, division, absolute_import, unicode_literals
+from builtins import *
 import logging
 import math
 import wave
@@ -57,7 +59,7 @@ class AudioSourceBase(object):
 
 class PyAudioMicrophoneSource(AudioSourceBase):
     def __init__(self, fmt=pyaudio.paInt16, channels=1, rate=16000, chunksize=1024, saver=None):
-        super(PyAudioMicrophoneSource, self).__init__(rate=rate, chunksize=chunksize)
+        super().__init__(rate=rate, chunksize=chunksize)
 
         self._pyaudio = pyaudio.PyAudio()
         self.format = fmt
@@ -128,7 +130,7 @@ class PyAudioMicrophoneSource(AudioSourceBase):
 
 class WaveFileSource(AudioSourceBase):
     def __init__(self, filename, rate=16000, chunksize=1024):
-        super(WaveFileSource, self).__init__(rate=rate, chunksize=chunksize)
+        super().__init__(rate=rate, chunksize=chunksize)
         self.filename = filename
         self.wavf = None
         self.total_num_frames = None
