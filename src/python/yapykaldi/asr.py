@@ -3,17 +3,13 @@ Yapykaldi ASR: Class definition for ASR component. It connects to a source and a
 """
 from __future__ import (print_function, division, absolute_import, unicode_literals)
 from builtins import *
-import logging
 import struct
 from threading import Event
-
 import numpy as np
-
+from .logger import logger
 from .nnet3 import KaldiNNet3OnlineDecoder, KaldiNNet3OnlineModel
 from .gmm import KaldiGmmOnlineDecoder, KaldiGmmOnlineModel
 from .io import AudioSourceBase
-
-logger = logging.getLogger('yapykaldi')
 
 
 ONLINE_MODELS = {'nnet3': KaldiNNet3OnlineModel, 'gmm': KaldiGmmOnlineModel}

@@ -1,7 +1,6 @@
 """Audio sources supported by Yapykaldi"""
 from __future__ import print_function, division, absolute_import, unicode_literals
 from builtins import *
-import logging
 import math
 import wave
 from threading import Event, Thread
@@ -9,13 +8,12 @@ from queue import Empty, Queue
 import pyaudio
 
 from .sinks import WaveFileSink
+from ..logger import logger
 
 try:
     from typing import Optional
 except ImportError:
     pass
-
-logger = logging.getLogger('yapykaldi')
 
 
 class AudioSourceBase(object):
