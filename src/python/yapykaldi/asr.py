@@ -12,6 +12,11 @@ from .gmm import KaldiGmmOnlineDecoder, KaldiGmmOnlineModel
 from .io import AudioSourceBase
 from .utils import volume_indicator
 
+try:
+    from typing import Optional
+except ImportError:
+    pass
+
 
 ONLINE_MODELS = {'nnet3': KaldiNNet3OnlineModel, 'gmm': KaldiGmmOnlineModel}
 ONLINE_DECODERS = {'nnet3': KaldiNNet3OnlineDecoder, 'gmm': KaldiGmmOnlineDecoder}
@@ -21,11 +26,12 @@ class Asr(object):
     """API for ASR"""
     # pylint: disable=too-many-instance-attributes, useless-object-inheritance
 
-    def __init__(self, model_dir, model_type, stream, timeout=2, debug=False):
+    def __init__(self, model_dir, model_type, stream=None, sink=None, timeout=2, debug=False):
         """
         :param model_dir: Path to model directory
         :param model_type: Type of ASR model 'nnet3' or 'hmm'
-        :param stream: Audio source object
+        :param stream: (default None) Audio source object to receive input stream
+        :param sink: (default None) Audio sink object to write output to
         :param timeout: (default 2) Time to wait for a new data buffer before stopping recognition due to unavailability
         of data
         :param debug: (default False) Flag to set logger to log audio chunk volume and partially decoded string and
@@ -34,7 +40,8 @@ class Asr(object):
         self.model_dir = model_dir
         self.model_type = model_type
 
-        self.stream = stream  # type: AudioSourceBase
+        self.stream = stream  # type: Optional[AudioSourceBase]
+        self.sink = sink  # type: Optional[AudioSinkBase]
 
         logger.info("Trying to initialize %s model from %s", self.model_type, self.model_dir)
         self.model = ONLINE_MODELS[self.model_type](self.model_dir)
