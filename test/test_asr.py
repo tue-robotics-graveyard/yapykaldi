@@ -22,7 +22,7 @@ parser.add_argument('--live', action='store_true',
 args = parser.parse_args()
 
 if args.file:
-    streamer = WaveFileSource(open(os.path.expanduser(args.file)))
+    streamer = WaveFileSource(os.path.expanduser(args.file))
 elif args.live:
     saver = WaveFileSink("dump.wav")
     streamer = PyAudioMicrophoneSource(saver=saver)
