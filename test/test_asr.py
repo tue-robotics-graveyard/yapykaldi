@@ -6,8 +6,12 @@ from builtins import *
 import argparse
 import os
 import signal
+import logging
 from yapykaldi.asr import Asr
 from yapykaldi.io import PyAudioMicrophoneSource, WaveFileSource, WaveFileSink
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='[%(asctime)s](%(processName)-9s) %(message)s',)
 
 model_dir = "../data/kaldi-generic-en-tdnn_fl-latest"
 model_type = "nnet3"

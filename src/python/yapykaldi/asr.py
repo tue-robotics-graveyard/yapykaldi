@@ -13,8 +13,6 @@ from .nnet3 import KaldiNNet3OnlineDecoder, KaldiNNet3OnlineModel
 from .gmm import KaldiGmmOnlineDecoder, KaldiGmmOnlineModel
 from .io import AudioSourceBase
 
-logging.basicConfig(level=logging.DEBUG,
-                    format='[%(asctime)s](%(processName)-9s) %(message)s',)
 logger = logging.getLogger('yapykaldi')
 
 
