@@ -33,7 +33,7 @@ class AsrPipelineElementBase(object):
     def start(self):
         raise NotImplementedError()
 
-    def next_chunk(self):
+    def next_chunk(self, timeout=None, chunk=None):
         raise NotImplementedError()
 
     def stop(self):
