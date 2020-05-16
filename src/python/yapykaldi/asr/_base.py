@@ -43,6 +43,9 @@ class AsrPipelineElementBase(object):
     def close(self):
         raise NotImplementedError()
 
+    def register_callback(self, callback):
+        raise NotImplementedError()
+
     def link(self, source=None, sink=None):
         """Link a source or a sink to the element
 
