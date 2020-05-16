@@ -7,7 +7,6 @@ from threading import Event, Thread
 from queue import Empty, Queue
 import pyaudio
 
-from .sinks import WaveFileSink
 from ._base import AsrPipelineElementBase
 from ..logger import logger
 
@@ -18,23 +17,18 @@ except ImportError:
 
 
 class PyAudioMicrophoneSource(AsrPipelineElementBase):
-    def __init__(self, fmt=pyaudio.paInt16, channels=1, rate=16000, chunksize=1024, saver=None):
+    def __init__(self, fmt=pyaudio.paInt16, channels=1, rate=16000, chunksize=1024):
         """
         :param fmt: (default pyaudio.paInt16) format of the audio data
         :param channels: (default 1) number of channels in audio data
         :param rate: (default 16000) sampling frequency of audio data
         :param chunksize: (default 1024) size of audio data buffer
-        :param saver: (default None) audio sink object
         """
-        super().__init__(rate=rate, chunksize=chunksize)
+        super().__init__(rate=rate, chunksize=chunksize, fmt=fmt, channels=channels)
 
         self._pyaudio = pyaudio.PyAudio()
-        self.format = fmt
-        self.channels = channels
-
         self.stream = None  # type: Optional[pyaudio.PyAudio]
 
-        self.saver = saver  # type: WaveFileSink
 
         self._queue = Queue()
         self._worker = None  # type: Optional[Thread]
@@ -72,9 +66,8 @@ class PyAudioMicrophoneSource(AsrPipelineElementBase):
         try:
             # logger.debug("{}\t-1 chunks in the queue".format(self._queue.qsize()))
             chunk = self._queue.get(block=True, timeout=timeout)
-            if self.saver:
-                self.saver.next_chunk(chunk=chunk)
-            return chunk
+            if self.sink:
+                self.sink.next_chunk(chunk=chunk)
         except Empty:
             raise StopIteration()
 
@@ -91,9 +84,10 @@ class PyAudioMicrophoneSource(AsrPipelineElementBase):
     def close(self):
         self.stream.close()
         self._pyaudio.terminate()
+        self.stream = None
 
-        if self.saver:
-            self.saver.write_frames()
+        if self.sink:
+            self.sink.close()
 
 
 class WaveFileSource(AsrPipelineElementBase):
