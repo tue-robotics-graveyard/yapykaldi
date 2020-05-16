@@ -41,3 +41,15 @@ class AsrPipelineElementBase(object):
 
     def close(self):
         raise NotImplementedError()
+
+    def link(self, source=None, sink=None):
+        """Link a source or a sink to the element
+
+        :param source: (default None) A source object
+        :param sink: (default None) A sink object
+        """
+        if not self.source:
+            self.source = source
+
+        if not self.sink:
+            self.sink = sink
