@@ -19,7 +19,9 @@ class AsrPipelineElementBase(object):
     """
     # pylint: disable=useless-object-inheritance
 
-    def __init__(self, rate=16000, chunksize=1024, fmt=pyaudio.paInt16, channels=1):
+    def __init__(self, source=None, sink=None, rate=16000, chunksize=1024, fmt=pyaudio.paInt16, channels=1):
+        self.source = source
+        self.sink = sink
         self.rate = rate
         self.chunksize = chunksize
         self.format = fmt
