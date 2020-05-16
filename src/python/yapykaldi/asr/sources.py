@@ -17,14 +17,15 @@ except ImportError:
 
 
 class PyAudioMicrophoneSource(AsrPipelineElementBase):
-    def __init__(self, fmt=pyaudio.paInt16, channels=1, rate=16000, chunksize=1024):
+    def __init__(self, fmt=pyaudio.paInt16, channels=1, rate=16000, chunksize=1024, timeout=1):
         """
         :param fmt: (default pyaudio.paInt16) format of the audio data
         :param channels: (default 1) number of channels in audio data
         :param rate: (default 16000) sampling frequency of audio data
         :param chunksize: (default 1024) size of audio data buffer
+        :param timeout: (default 1) timeout for reading audio buffer
         """
-        super().__init__(rate=rate, chunksize=chunksize, fmt=fmt, channels=channels)
+        super().__init__(rate=rate, chunksize=chunksize, fmt=fmt, channels=channels, timeout=1)
 
         self._pyaudio = pyaudio.PyAudio()
         self.stream = None  # type: Optional[pyaudio.PyAudio]
@@ -61,10 +62,10 @@ class PyAudioMicrophoneSource(AsrPipelineElementBase):
         self.stream.stop_stream()
         logger.info("Stopped streaming audio")
 
-    def next_chunk(self, timeout=1):
+    def next_chunk(self):
         try:
             # logger.debug("{}\t-1 chunks in the queue".format(self._queue.qsize()))
-            chunk = self._queue.get(block=True, timeout=timeout)
+            chunk = self._queue.get(block=True, timeout=self.timeout)
             if self.sink:
                 self.sink.next_chunk(chunk=chunk)
         except Empty:
