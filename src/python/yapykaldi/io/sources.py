@@ -29,37 +29,36 @@ class PyAudioMicrophoneSource(AsrPipelineElementBase):
         self._pyaudio = pyaudio.PyAudio()
         self.stream = None  # type: Optional[pyaudio.PyAudio]
 
-
         self._queue = Queue()
         self._worker = None  # type: Optional[Thread]
 
         self._stop = Event()
 
     def open(self):
-        # This function is needed to maintain generality in api of stream sources
-        pass
+        if not self.stream:
+            self.stream = self._pyaudio.open(format=self.format,
+                                             channels=self.channels,
+                                             rate=self.rate,
+                                             input=True,
+                                             frames_per_buffer=self.chunksize,
+                                             start=False)
 
     def start(self):
         # Start async process to put audio chunks in a queue
         self._stop.clear()
+        self.stream.start_stream()
         self._worker = Thread(target=self._listen, args=(self._stop,))
         logger.info("Starting audio stream in a separate thread")
         self._worker.start()
 
     def _listen(self, stop_event):
-        stream = self._pyaudio.open(format=self.format,
-                                    channels=self.channels,
-                                    rate=self.rate,
-                                    input=True,
-                                    frames_per_buffer=self.chunksize)
 
         while not stop_event.wait(0):
-            chunk = stream.read(self.chunksize)
+            chunk = self.stream.read(self.chunksize)
             # logger.debug("{}\t+1 chunks in the queue".format(self._queue.qsize()))
             self._queue.put(chunk)
 
-        stream.stop_stream()
-        stream.close()
+        self.stream.stop_stream()
         logger.info("Stopped streaming audio")
 
     def next_chunk(self, timeout=1):
