@@ -6,11 +6,11 @@ from builtins import *
 import struct
 from threading import Event
 import numpy as np
-from .logger import logger
-from .nnet3 import KaldiNNet3OnlineDecoder, KaldiNNet3OnlineModel
-from .gmm import KaldiGmmOnlineDecoder, KaldiGmmOnlineModel
-from .io import AudioSourceBase
-from .utils import volume_indicator
+from ._base import AsrPipelineElementBase
+from ..logger import logger
+from ..nnet3 import KaldiNNet3OnlineDecoder, KaldiNNet3OnlineModel
+from ..gmm import KaldiGmmOnlineDecoder, KaldiGmmOnlineModel
+from ..utils import volume_indicator
 
 try:
     from typing import Optional
@@ -22,32 +22,26 @@ ONLINE_MODELS = {'nnet3': KaldiNNet3OnlineModel, 'gmm': KaldiGmmOnlineModel}
 ONLINE_DECODERS = {'nnet3': KaldiNNet3OnlineDecoder, 'gmm': KaldiGmmOnlineDecoder}
 
 
-class Asr(object):
+class Asr(AsrPipelineElementBase):
     """API for ASR"""
     # pylint: disable=too-many-instance-attributes, useless-object-inheritance
 
-    def __init__(self, model_dir, model_type, stream=None, sink=None, timeout=2, debug=False):
+    def __init__(self, model_dir, model_type, timeout=2, debug=False):
         """
         :param model_dir: Path to model directory
         :param model_type: Type of ASR model 'nnet3' or 'hmm'
-        :param stream: (default None) Audio source object to receive input stream
-        :param sink: (default None) Audio sink object to write output to
         :param timeout: (default 2) Time to wait for a new data buffer before stopping recognition due to unavailability
         of data
         :param debug: (default False) Flag to set logger to log audio chunk volume and partially decoded string and
         likelihood
         """
+        super().__init__(timeout=timeout)
         self.model_dir = model_dir
         self.model_type = model_type
-
-        self.stream = stream  # type: Optional[AudioSourceBase]
-        self.sink = sink  # type: Optional[AudioSinkBase]
 
         logger.info("Trying to initialize %s model from %s", self.model_type, self.model_dir)
         self.model = ONLINE_MODELS[self.model_type](self.model_dir)
         logger.info("Successfully initialized %s model from %s", self.model_type, self.model_dir)
-
-        self.timeout = timeout
 
         self._finalize = Event()
 
@@ -69,8 +63,9 @@ class Asr(object):
         decoded_string = ""
         while not self._finalize.is_set():
             try:
-                chunk = self.stream.get_next_chunk(self.timeout)
-                data = np.array(struct.unpack_from('<%dh' % self.stream.chunksize, chunk), dtype=np.float32)
+                # TODO: Fix this
+                chunk = self.source.next_chunk(self.timeout)
+                data = np.array(struct.unpack_from('<%dh' % self.source.chunksize, chunk), dtype=np.float32)
             except StopIteration as e:  # pylint: disable=invalid-name
                 logger.info("Stream reached it end")
                 logger.error(e)
@@ -79,7 +74,7 @@ class Asr(object):
                 logger.error("Other exception happened: %s", e)
                 break
             else:
-                if decoder.decode(self.stream.rate, data, self._finalize.is_set()):
+                if decoder.decode(self.source.rate, data, self._finalize.is_set()):
                     decoded_string, likelihood = decoder.get_decoded_string()
 
                     if self._debug:
@@ -102,7 +97,7 @@ class Asr(object):
         """Stop ASR process"""
         logger.info("Stop ASR")
         self._finalize.set()
-        self.stream.stop()
+        self.source.stop()
 
     def start(self):
         """Begin ASR process"""
@@ -111,7 +106,7 @@ class Asr(object):
 
         self._finalize.clear()
 
-        self.stream.start()
+        self.source.start()
 
     def register_callback(self, callback, partial=False):
         """
