@@ -1,14 +1,14 @@
 """
-Yapykaldi I/O: Classes and functions for I/O operations with all the wrappers
+Yapykaldi ASR: Classes and functions for ASR pipeline
 """
 
 __all__ = [
     # From .sources
-    "AudioSourceBase", "PyAudioMicrophoneSource", "WaveFileSource",
+    "PyAudioMicrophoneSource", "WaveFileSource",
 
     # From .sinks
     "WaveFileSink"
 ]
 
-from .sources import AudioSourceBase, PyAudioMicrophoneSource, WaveFileSource
+from .sources import PyAudioMicrophoneSource, WaveFileSource
 from .sinks import WaveFileSink
