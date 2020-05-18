@@ -68,6 +68,7 @@ class PyAudioMicrophoneSource(AsrPipelineElementBase):
             chunk = self._queue.get(block=True, timeout=self.timeout)
             if self.sink:
                 self.sink.next_chunk(chunk=chunk)
+            return chunk
         except Empty:
             raise StopIteration()
 
