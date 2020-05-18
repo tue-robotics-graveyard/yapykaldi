@@ -129,10 +129,6 @@ class WaveFileSource(AsrPipelineElementBase):
 
         raise StopIteration()
 
-    def stop(self):
-        # This function is needed to maintain generality in api of stream sources
-        pass
-
     def close(self):
         self.wavf.close()
         logger.info("Stream closed from %s", self.filename)
