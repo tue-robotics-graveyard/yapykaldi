@@ -62,7 +62,7 @@ class PyAudioMicrophoneSource(AsrPipelineElementBase):
         self.stream.stop_stream()
         logger.info("Stopped streaming audio")
 
-    def next_chunk(self):
+    def next_chunk(self, chunk=None):
         try:
             # logger.debug("{}\t-1 chunks in the queue".format(self._queue.qsize()))
             chunk = self._queue.get(block=True, timeout=self.timeout)
@@ -121,7 +121,7 @@ class WaveFileSource(AsrPipelineElementBase):
         self.total_chunks = math.floor(self.total_num_frames / self.chunksize)
         self.read_chunks = 0
 
-    def next_chunk(self):
+    def next_chunk(self, chunk=None):
         if self.read_chunks < self.total_chunks:
             frames = self.wavf.readframes(self.chunksize)
             self.read_chunks += 1
