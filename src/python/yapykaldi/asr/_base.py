@@ -1,25 +1,33 @@
 """Base classes for the ASR pipeline"""
 from __future__ import print_function, division, absolute_import, unicode_literals
 from builtins import *
+from abc import ABCMeta, abstractmethod
 import pyaudio
 
 
 class AsrPipelineElementBase(object):
     """Class AsrPipelineElementBase is the base class for all Asr Pipeline elements.
 
+    It requires three abstract methods to be implemented:
+    1. open
+    2. close
+    3. next_chunk
+
     The right order of setting up an element is:
     1. element = AsrPipelineElementBase()
     2. element.open()                # To open the file, connect the mic etc.
     3. element.start()               # Start streaming audio data
-    4. element.get_chunk()           # Use the audio data
+    4. element.next_chunk()          # Use the audio data
     5. element.stop()                # stop getting audio data
     6. element.close()               # close the file
 
-    Element need to support open and close at least once but must support
-    start, get_chunk, stop several times
+    Elements need to support open and close at least once but must support
+    start, next_chunk, stop several times
 
     """
     # pylint: disable=useless-object-inheritance
+
+    __metaclass__ = ABCMeta
 
     def __init__(self, source=None, sink=None, rate=16000, chunksize=1024, fmt=pyaudio.paInt16, channels=1, timeout=1):
         self._source = source
@@ -30,22 +38,27 @@ class AsrPipelineElementBase(object):
         self.channels = channels
         self.timeout = timeout
 
+    @abstractmethod
     def open(self):
-        raise NotImplementedError()
+        """Abstract method to open the stream of the element. Opening may or may not start the stream."""
+
+    @abstractmethod
+    def next_chunk(self, chunk=None):
+        """Abstract method to process a chunk generated in the source element or received from the source element"""
+
+    @abstractmethod
+    def close(self):
+        """Abstract method to close the stream of the element. In this method all resources of the stream should be
+        freed."""
 
     def start(self):
-        raise NotImplementedError()
-
-    def next_chunk(self, timeout=None, chunk=None):
-        raise NotImplementedError()
+        """Optional method to start the stream of the element"""
 
     def stop(self):
-        raise NotImplementedError()
-
-    def close(self):
-        raise NotImplementedError()
+        """Optional method to stop the stream of the element"""
 
     def register_callback(self, callback):
+        """Register a callback to the element outside the pipeline"""
         raise NotImplementedError()
 
     def link(self, source=None, sink=None):
