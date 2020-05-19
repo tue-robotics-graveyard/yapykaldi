@@ -37,7 +37,7 @@ class AsrPipeline(object):
 
         logger.info("Checking the continuity of the pipeline")
         for element in self._elements:
-            if not (element._source and element._sink):
+            if (not element._source) and (not element._sink):
                 raise BrokenPipeError("Element with no source or sink")
 
             if (not element._source) and element._sink:
