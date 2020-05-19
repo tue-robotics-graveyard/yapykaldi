@@ -18,13 +18,13 @@ pipeline.open()
 
 
 # Define function to set stop condition
-def stop_when():
-    for i in range(0, int(source.rate / source.chunksize * RECORD_SECONDS)):
-        source.get_next_chunk()
+def stop():
+    if pipeline._iterations == int(source.rate / source.chunksize * RECORD_SECONDS):
+        pipeline.stop()
 
 
-# Set the stop callback
-pipeline.stop(stop_when)
+# Register the stop callback
+pipeline.register_callback(stop)
 
 # Start pipeline
 pipeline.start()
