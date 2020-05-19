@@ -6,6 +6,7 @@ from builtins import *
 import struct
 from threading import Event
 import numpy as np
+from typing import Optional
 
 from .logger import logger
 from .nnet3 import KaldiNNet3OnlineDecoder, KaldiNNet3OnlineModel
@@ -63,6 +64,7 @@ class Asr(object):
         decoder = ONLINE_DECODERS[self.model_type](self.model)
         logger.info("Successfully initialized %s model decoder", self.model_type)
 
+        likelihood = 0
         decoded_string = ""
         while not self._finalize.is_set():
             try:
