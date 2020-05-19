@@ -6,6 +6,9 @@ __all__ = [
     # From .asr
     "Asr",
 
+    # From .pipeline
+    "AsrPipeline",
+
     # From .sources
     "PyAudioMicrophoneSource", "WaveFileSource",
 
@@ -14,5 +17,6 @@ __all__ = [
 ]
 
 from .asr import Asr
+from .pipeline import AsrPipeline
 from .sources import PyAudioMicrophoneSource, WaveFileSource
 from .sinks import WaveFileSink
