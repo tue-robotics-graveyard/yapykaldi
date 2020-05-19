@@ -7,7 +7,7 @@ from ._base import AsrPipelineElementBase
 
 
 class WaveFileSink(AsrPipelineElementBase):
-    def __init__(self, wavpath, fmt=pyaudio.paInt16, channels=1, rate=16000, chunksize=1024):
+    def __init__(self, wavpath, fmt=pyaudio.paInt16, channels=1, rate=16000, chunksize=1024, source=None):
         """
 
         :param wavpath: location where to save audio to
@@ -15,8 +15,10 @@ class WaveFileSink(AsrPipelineElementBase):
         :param channels: (default 1) Number of channels of the audio stream
         :param rate: (default 16000) Sampling frequency of the audio stream
         :param chunksize: (default 1024) Size of the audio stream buffer
+        :param source: (default None) Element to be connected as source
+        :type source: AsrPipelineElementBase
         """
-        super().__init__(rate=rate, chunksize=chunksize, fmt=fmt, channels=channels)
+        super().__init__(rate=rate, chunksize=chunksize, fmt=fmt, channels=channels, source=None)
         self._pyaudio = pyaudio.PyAudio()
         self.wavpath = wavpath
 
