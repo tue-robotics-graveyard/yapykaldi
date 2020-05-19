@@ -131,7 +131,8 @@ class AsrPipeline(object):
 
     def _set_finalize(self):
         """Finalize processing of chunks in the pipeline elements"""
-        self._finalize.wait()
+        if self._finalize.is_set():
+            raise Exception("Internal state _finalize of the pipeline not cleared before calling _set_finalize")
 
         element = self._source
         while element:
