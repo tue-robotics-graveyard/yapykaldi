@@ -66,11 +66,13 @@ class AsrPipelineElementBase(object):
     def link(self, source=None, sink=None):
         """Link a source or a sink to the element
 
+        This method does not override preset source or sink of the element.
+
         :param source: (default None) A source object
         :param sink: (default None) A sink object
         """
-        if not self._source:
+        if (not self._source) and source:
             self._source = source
 
-        if not self._sink:
+        if (not self._sink) and sink:
             self._sink = sink
