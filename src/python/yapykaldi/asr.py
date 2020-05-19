@@ -6,11 +6,13 @@ from builtins import *
 import struct
 from threading import Event
 import numpy as np
+
 from .logger import logger
 from .nnet3 import KaldiNNet3OnlineDecoder, KaldiNNet3OnlineModel
 from .gmm import KaldiGmmOnlineDecoder, KaldiGmmOnlineModel
 from .io import AudioSourceBase
 from .utils import volume_indicator
+from .grammar import Grammar
 
 
 ONLINE_MODELS = {'nnet3': KaldiNNet3OnlineModel, 'gmm': KaldiGmmOnlineModel}
@@ -21,7 +23,7 @@ class Asr(object):
     """API for ASR"""
     # pylint: disable=too-many-instance-attributes, useless-object-inheritance
 
-    def __init__(self, model_dir, model_type, stream, timeout=2, debug=False):
+    def __init__(self, model_dir, model_type, stream, timeout=2, debug=False, grammar=None):
         """
         :param model_dir: Path to model directory
         :param model_type: Type of ASR model 'nnet3' or 'hmm'
@@ -30,11 +32,13 @@ class Asr(object):
         of data
         :param debug: (default False) Flag to set logger to log audio chunk volume and partially decoded string and
         likelihood
+        :param grammar: an instance of Grammar to tell whether heard words make sense
         """
         self.model_dir = model_dir
         self.model_type = model_type
 
         self.stream = stream  # type: AudioSourceBase
+        self.grammar = grammar  # type: Optional[Grammar]
 
         logger.info("Trying to initialize %s model from %s", self.model_type, self.model_dir)
         self.model = ONLINE_MODELS[self.model_type](self.model_dir)
