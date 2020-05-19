@@ -30,13 +30,15 @@ class AsrPipelineElementBase(object):
     __metaclass__ = ABCMeta
 
     def __init__(self, source=None, sink=None, rate=16000, chunksize=1024, fmt=pyaudio.paInt16, channels=1, timeout=1):
-        self._source = source
-        self._sink = sink
+        self._source = None
+        self._sink = None
         self.rate = rate
         self.chunksize = chunksize
         self.format = fmt
         self.channels = channels
         self.timeout = timeout
+
+        self.link(source=source, sink=sink)
 
     @abstractmethod
     def open(self):
