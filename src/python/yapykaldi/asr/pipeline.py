@@ -16,14 +16,17 @@ class AsrPipeline(object):
         self._open_state = Event()
         self._start_state = Event()
 
-    def add(self, element):
+    def add(self, element, *elements):
         """
-        Add element to the pipeline
+        Add element(s) to the pipeline
 
-        :param element: Element to be added
+        :param element: Element to be added. Multiple elements can be passed as comma separated args
         :type element: AsrPipelineElementBase
         """
         self._elements.append(element)
+
+        if elements:
+            self._elements += elements
 
     def _check(self):
         """Internal method to check if the pipeline is continuous"""
