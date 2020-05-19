@@ -73,6 +73,8 @@ class AsrPipelineElementBase(object):
         """
         if (not self._source) and source:
             self._source = source
+            source.link(sink=self)
 
         if (not self._sink) and sink:
             self._sink = sink
+            sink.link(source=self)
