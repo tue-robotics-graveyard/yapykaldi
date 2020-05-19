@@ -2,6 +2,7 @@
 from __future__ import print_function, division, absolute_import, unicode_literals
 from builtins import *
 from abc import ABCMeta, abstractmethod
+from threading import Event
 import pyaudio
 
 
@@ -37,6 +38,7 @@ class AsrPipelineElementBase(object):
         self.format = fmt
         self.channels = channels
         self.timeout = timeout
+        self._finalize = Event()
 
         self.link(source=source, sink=sink)
 
@@ -77,3 +79,7 @@ class AsrPipelineElementBase(object):
         if (not self._sink) and sink:
             self._sink = sink
             sink.link(source=self)
+
+    def finalize(self):
+        """Set the finalize flag of the element"""
+        self._finalize.set()
