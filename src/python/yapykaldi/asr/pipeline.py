@@ -16,6 +16,7 @@ class AsrPipeline(object):
         self._open_state = Event()
         self._stop_state = Event()
         self._callbacks = []
+        self._iterations = 0
 
         self._stop_state.set()
 
@@ -91,6 +92,8 @@ class AsrPipeline(object):
             while element:
                 chunk = element.next_chunk(chunk)
                 element = element._sink
+
+            self._iterations += 1
 
             for callback in self._callbacks:
                 callback()
