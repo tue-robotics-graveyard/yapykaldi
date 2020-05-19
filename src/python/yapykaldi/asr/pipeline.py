@@ -15,6 +15,7 @@ class AsrPipeline(object):
         self._elements = []
         self._open_state = Event()
         self._stop_state = Event()
+        self._finalize = Event()
         self._callbacks = []
         self._iterations = 0
 
@@ -86,7 +87,12 @@ class AsrPipeline(object):
         self._stop_state.clear()
         logger.info("Successfully started pipeline")
 
-        while not self._stop_state.is_set():
+        self._finalize.clear()
+
+        while not self._finalize.is_set():
+            if self._stop_state.is_set():
+                self._set_finalize()
+
             element = self._source
             chunk = None
             while element:
@@ -122,6 +128,17 @@ class AsrPipeline(object):
             element = element._sink
 
         logger.info("Successfully stopped the pipeline")
+
+    def _set_finalize(self):
+        """Finalize processing of chunks in the pipeline elements"""
+        self._finalize.wait()
+
+        element = self._source
+        while element:
+            element.finalize()
+            element = element._sink
+
+        self._finalize.set()
 
     def close(self):
         """Close the streams of the pipeline elements"""
