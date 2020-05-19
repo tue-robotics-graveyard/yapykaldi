@@ -47,7 +47,7 @@ class AsrPipelineElementBase(object):
         """Abstract method to open the stream of the element. Opening may or may not start the stream."""
 
     @abstractmethod
-    def next_chunk(self, chunk=None):
+    def next_chunk(self, chunk):
         """Abstract method to process a chunk generated in the source element or received from the source element"""
 
     @abstractmethod
