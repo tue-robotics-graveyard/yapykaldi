@@ -14,7 +14,9 @@ class AsrPipeline(object):
         self._sink = None
         self._elements = []
         self._open_state = Event()
-        self._start_state = Event()
+        self._stop_state = Event()
+
+        self._stop_state.set()
 
     def add(self, element, *elements):
         """
@@ -70,7 +72,7 @@ class AsrPipeline(object):
         if not self._open_state.is_set():
             raise Exception("Cannot start pipeline before opening it")
 
-        if self._start_state.is_set():
+        if not self._stop_state.is_set():
             raise Exception("Pipeline already started")
 
         logger.info("Trying to start the pipeline")
@@ -79,8 +81,17 @@ class AsrPipeline(object):
             element.start()
             element = element._sink
 
-        self._start_state.set()
+        self._stop_state.clear()
         logger.info("Successfully started pipeline")
+
+        while not self._stop_state.is_set():
+            element = self._source
+            chunk = None
+            while element:
+                chunk = element.next_chunk(chunk)
+                element = element._sink
+
+        self._stop()
 
     def stop(self):
         """Stop the flow of data across the pipeline.
@@ -88,11 +99,30 @@ class AsrPipeline(object):
         This method calls the stop() method of each of the pipeline elements with additional consistency checks in the
         pipeline.
         """
+        if self._stop_state.is_set():
+            raise Exception("Cannot stop a pipeline that has not started")
+
+        self._stop_state.set()
+
+    def _stop(self):
+        """Internal method actually stopping the pipeline"""
+        self._stop_state.wait()
+
+        logger.info("Trying to stop the pipeline")
+        element = self._source
+        while element:
+            element.stop()
+            element = element._sink
+
+        logger.info("Successfully stopped the pipeline")
 
     def close(self):
         """Close the streams of the pipeline elements"""
         if not self._open_state.is_set():
-            raise Exception("Pipeline not opened. First open pipeline before closing it.")
+            raise Exception("Pipeline not opened. First open the pipeline before closing it.")
+
+        if not self._stop_state.is_set():
+            raise Exception("Pipeline running. First stop the pipeline before closing it.")
 
         logger.info("Trying to close the pipeline")
         element = self._source
