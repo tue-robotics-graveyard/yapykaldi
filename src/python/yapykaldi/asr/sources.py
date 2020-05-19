@@ -68,8 +68,6 @@ class PyAudioMicrophoneSource(AsrPipelineElementBase):
         try:
             # logger.debug("{}\t-1 chunks in the queue".format(self._queue.qsize()))
             chunk = self._queue.get(block=True, timeout=self.timeout)
-            #  if self.sink:
-            #     self.sink.next_chunk(chunk=chunk)
             return chunk
         except Empty:
             raise StopIteration()
@@ -88,9 +86,6 @@ class PyAudioMicrophoneSource(AsrPipelineElementBase):
         self.stream.close()
         self._pyaudio.terminate()
         self.stream = None
-
-        #  if self.sink:
-        #     self.sink.close()
 
 
 class WaveFileSource(AsrPipelineElementBase):
