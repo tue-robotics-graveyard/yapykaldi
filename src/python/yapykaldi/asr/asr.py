@@ -26,7 +26,7 @@ class Asr(AsrPipelineElementBase):
     """API for ASR"""
     # pylint: disable=too-many-instance-attributes, useless-object-inheritance
 
-    def __init__(self, model_dir, model_type, timeout=2, debug=False):
+    def __init__(self, model_dir, model_type, timeout=2, debug=False, source=None, sink=None):
         """
         :param model_dir: Path to model directory
         :param model_type: Type of ASR model 'nnet3' or 'hmm'
@@ -34,8 +34,12 @@ class Asr(AsrPipelineElementBase):
         of data
         :param debug: (default False) Flag to set logger to log audio chunk volume and partially decoded string and
         likelihood
+        :param source: (default None) Element to be connected as source when constructing an AsrPipeline
+        :type source: AsrPipelineElementBase
+        :param sink: (default None) Element to be connected as sink when constructing an AsrPipeline
+        :type sink: AsrPipelineElementBase
         """
-        super().__init__(timeout=timeout)
+        super().__init__(timeout=timeout, source=source, sink=sink)
         self.model_dir = model_dir
         self.model_type = model_type
 
