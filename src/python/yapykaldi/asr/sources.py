@@ -17,15 +17,17 @@ except ImportError:
 
 
 class PyAudioMicrophoneSource(AsrPipelineElementBase):
-    def __init__(self, fmt=pyaudio.paInt16, channels=1, rate=16000, chunksize=1024, timeout=1):
+    def __init__(self, fmt=pyaudio.paInt16, channels=1, rate=16000, chunksize=1024, timeout=1, sink=None):
         """
         :param fmt: (default pyaudio.paInt16) format of the audio data
         :param channels: (default 1) number of channels in audio data
         :param rate: (default 16000) sampling frequency of audio data
         :param chunksize: (default 1024) size of audio data buffer
         :param timeout: (default 1) timeout for reading audio buffer
+        :param sink: Element to be connected as sink
+        :type sink: AsrPipelineElementBase
         """
-        super().__init__(rate=rate, chunksize=chunksize, fmt=fmt, channels=channels, timeout=1)
+        super().__init__(rate=rate, chunksize=chunksize, fmt=fmt, channels=channels, timeout=timeout, sink=sink)
 
         self._pyaudio = pyaudio.PyAudio()
         self.stream = None  # type: Optional[pyaudio.PyAudio]
@@ -92,14 +94,16 @@ class PyAudioMicrophoneSource(AsrPipelineElementBase):
 
 
 class WaveFileSource(AsrPipelineElementBase):
-    def __init__(self, filename, rate=16000, chunksize=1024):
+    def __init__(self, filename, rate=16000, chunksize=1024, sink=None):
         """
         :param filename: path to the wave file
         :type filename: str
         :param rate: (default 16000) sampling frequency of audio data
         :param chunksize: (default 1024) size of audio data buffer
+        :param sink: Element to be connected as sink
+        :type sink: AsrPipelineElementBase
         """
-        super().__init__(rate=rate, chunksize=chunksize)
+        super().__init__(rate=rate, chunksize=chunksize, sink=sink)
         self.filename = filename
         self.wavf = None
         self.total_num_frames = None
