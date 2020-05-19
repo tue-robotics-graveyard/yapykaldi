@@ -15,6 +15,7 @@ class AsrPipeline(object):
         self._elements = []
         self._open_state = Event()
         self._stop_state = Event()
+        self._callbacks = []
 
         self._stop_state.set()
 
@@ -91,6 +92,9 @@ class AsrPipeline(object):
                 chunk = element.next_chunk(chunk)
                 element = element._sink
 
+            for callback in self._callbacks:
+                callback()
+
         self._stop()
 
     def stop(self):
@@ -133,5 +137,9 @@ class AsrPipeline(object):
         self._open_state.clear()
         logger.info("Successfully closed the pipeline")
 
-    def register_callback(self, handle):
-        """Register a callback"""
+    def register_callback(self, callback):
+        """Register a callback
+
+        :param callback: A function taking no args as input
+        """
+        self._callbacks.append(callback)
