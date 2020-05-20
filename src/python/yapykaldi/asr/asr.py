@@ -64,6 +64,9 @@ class Asr(AsrPipelineElementBase):
             raise
         else:
             if self._decoder.decode(self.rate, data, self._finalize.is_set()):
+                if self._finalize.is_set():
+                    logger.info("Finalized decoding with latest data chunk")
+
                 self._decoded_string, self._likelihood = self._decoder.get_decoded_string()
                 if self._debug:
                     chunk_volume_level = volume_indicator(data)
