@@ -103,9 +103,9 @@ class AsrPipeline(object):
                 try:
                     chunk = element.next_chunk(chunk)
                     element = element._sink
-                except StopIteration as e:  # pylint: disable=invalid-name
+                except StopIteration:
                     logger.info("Stream reached its end")
-                    logger.error(e)
+                    self._stop_state.set()
                     return
 
             self._iterations += 1
