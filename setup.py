@@ -9,7 +9,7 @@ import pybind11
 import pkgconfig
 
 
-VERSION = "0.2.0"
+VERSION = "0.3.0"
 PACKAGE = "yapykaldi"
 PACKAGE_DIR = os.path.join('src', 'python')
 
