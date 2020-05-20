@@ -88,7 +88,11 @@ class AsrPipeline(object):
         logger.info("Successfully started pipeline")
 
         self._finalize.clear()
+        self._next_chunk()
+        self._stop()
 
+    def _next_chunk(self):
+        """Internal method to iterate over chunks in the pipeline"""
         while not self._finalize.is_set():
             if self._stop_state.is_set():
                 self._set_finalize()
@@ -96,15 +100,18 @@ class AsrPipeline(object):
             element = self._source
             chunk = None
             while element:
-                chunk = element.next_chunk(chunk)
-                element = element._sink
+                try:
+                    chunk = element.next_chunk(chunk)
+                    element = element._sink
+                except StopIteration as e:  # pylint: disable=invalid-name
+                    logger.info("Stream reached its end")
+                    logger.error(e)
+                    return
 
             self._iterations += 1
 
             for callback in self._callbacks:
                 callback()
-
-        self._stop()
 
     def stop(self):
         """Stop the flow of data across the pipeline.
