@@ -37,7 +37,8 @@ class Asr(AsrPipelineElementBase):
         self.model_dir = model_dir
         self.model_type = model_type
 
-        self.decoder = None
+        self._model = None
+        self._decoder = None
         self._decoded_string = None
         self._likelihood = None
 
@@ -56,16 +57,14 @@ class Asr(AsrPipelineElementBase):
 
     def next_chunk(self, chunk):
         """Method to start the recognition process on audio stream added to process queue"""
-
         try:
             data = np.array(struct.unpack_from('<%dh' % self.chunksize, chunk), dtype=np.float32)
         except Exception as e:  # pylint: disable=invalid-name, broad-except
             logger.error("Other exception happened: %s", e)
             raise
         else:
-            if self.decoder.decode(self.rate, data, self._finalize.is_set()):
-                self._decoded_string, self._likelihood = self.decoder.get_decoded_string()
-
+            if self._decoder.decode(self.rate, data, self._finalize.is_set()):
+                self._decoded_string, self._likelihood = self._decoder.get_decoded_string()
                 if self._debug:
                     chunk_volume_level = volume_indicator(data)
                     logger.info("Chunk volume level: %s", chunk_volume_level)
@@ -96,11 +95,11 @@ class Asr(AsrPipelineElementBase):
         self._finalize.clear()
 
         logger.info("Trying to initialize %s model from %s", self.model_type, self.model_dir)
-        model = ONLINE_MODELS[self.model_type](self.model_dir)
+        self._model = ONLINE_MODELS[self.model_type](self.model_dir)
         logger.info("Successfully initialized %s model from %s", self.model_type, self.model_dir)
 
         logger.info("Trying to initialize %s model decoder", self.model_type)
-        self.decoder = ONLINE_DECODERS[self.model_type](model)
+        self._decoder = ONLINE_DECODERS[self.model_type](self._model)
         logger.info("Successfully initialized %s model decoder", self.model_type)
 
         self._decoded_string = ""
