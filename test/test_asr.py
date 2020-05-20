@@ -33,8 +33,6 @@ elif args.live:
 else:
     raise Exception("Specify either --live or --file=audio.wav")
 
-#  streamer.open()
-
 # Remove the debug arg to reduce verbosity
 asr = Asr(model_dir, model_type, debug=True, source=streamer, sink=saver)
 
