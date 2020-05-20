@@ -4,18 +4,12 @@ Yapykaldi ASR: Class definition for ASR component. It connects to a source and a
 from __future__ import (print_function, division, absolute_import, unicode_literals)
 from builtins import *
 import struct
-from threading import Event
 import numpy as np
 from ._base import AsrPipelineElementBase
 from ..logger import logger
 from ..nnet3 import KaldiNNet3OnlineDecoder, KaldiNNet3OnlineModel
 from ..gmm import KaldiGmmOnlineDecoder, KaldiGmmOnlineModel
 from ..utils import volume_indicator
-
-try:
-    from typing import Optional
-except ImportError:
-    pass
 
 
 ONLINE_MODELS = {'nnet3': KaldiNNet3OnlineModel, 'gmm': KaldiGmmOnlineModel}
@@ -26,12 +20,12 @@ class Asr(AsrPipelineElementBase):
     """API for ASR"""
     # pylint: disable=too-many-instance-attributes, useless-object-inheritance
 
-    def __init__(self, model_dir, model_type, timeout=2, debug=False, source=None, sink=None):
+    def __init__(self, model_dir, model_type, rate=16000, chunksize=1024, debug=False, source=None, sink=None):
         """
         :param model_dir: Path to model directory
         :param model_type: Type of ASR model 'nnet3' or 'hmm'
-        :param timeout: (default 2) Time to wait for a new data buffer before stopping recognition due to unavailability
-        of data
+        :param rate: (default 16000) sampling frequency of audio data. This must be the same as the audio source
+        :param chunksize: (default 1024) size of audio data buffer. This must be the same as the audio source
         :param debug: (default False) Flag to set logger to log audio chunk volume and partially decoded string and
         likelihood
         :param source: (default None) Element to be connected as source when constructing an AsrPipeline
@@ -39,7 +33,7 @@ class Asr(AsrPipelineElementBase):
         :param sink: (default None) Element to be connected as sink when constructing an AsrPipeline
         :type sink: AsrPipelineElementBase
         """
-        super().__init__(timeout=timeout, source=source, sink=sink)
+        super().__init__(chunksize=chunksize, rate=rate, source=source, sink=sink)
         self.model_dir = model_dir
         self.model_type = model_type
 
@@ -47,12 +41,18 @@ class Asr(AsrPipelineElementBase):
         self.model = ONLINE_MODELS[self.model_type](self.model_dir)
         logger.info("Successfully initialized %s model from %s", self.model_type, self.model_dir)
 
-        self._finalize = Event()
-
         self._string_partially_recognized_callbacks = []
         self._string_fully_recognized_callbacks = []
 
         self._debug = debug
+
+    def open(self):
+        # No definition for this method while inheriting abstract class AsrPipelineElementBase
+        pass
+
+    def close(self):
+        # No definition for this method while inheriting abstract class AsrPipelineElementBase
+        pass
 
     def recognize(self):
         """Method to start the recognition process on audio stream added to process queue"""
