@@ -37,9 +37,9 @@ class Asr(AsrPipelineElementBase):
         self.model_dir = model_dir
         self.model_type = model_type
 
-        logger.info("Trying to initialize %s model from %s", self.model_type, self.model_dir)
-        self.model = ONLINE_MODELS[self.model_type](self.model_dir)
-        logger.info("Successfully initialized %s model from %s", self.model_type, self.model_dir)
+        self.decoder = None
+        self._decoded_string = None
+        self._likelihood = None
 
         self._string_partially_recognized_callbacks = []
         self._string_fully_recognized_callbacks = []
@@ -54,54 +54,39 @@ class Asr(AsrPipelineElementBase):
         # No definition for this method while inheriting abstract class AsrPipelineElementBase
         pass
 
-    def recognize(self):
+    def next_chunk(self, chunk):
         """Method to start the recognition process on audio stream added to process queue"""
 
-        if self._finalize.is_set():
-            raise Exception("Asr object not initialized for recognition")
+        try:
+            data = np.array(struct.unpack_from('<%dh' % self.chunksize, chunk), dtype=np.float32)
+        except Exception as e:  # pylint: disable=invalid-name, broad-except
+            logger.error("Other exception happened: %s", e)
+            raise
+        else:
+            if self.decoder.decode(self.rate, data, self._finalize.is_set()):
+                self._decoded_string, self._likelihood = self.decoder.get_decoded_string()
 
-        logger.info("Trying to initialize %s model decoder", self.model_type)
-        decoder = ONLINE_DECODERS[self.model_type](self.model)
-        logger.info("Successfully initialized %s model decoder", self.model_type)
+                if self._debug:
+                    chunk_volume_level = volume_indicator(data)
+                    logger.info("Chunk volume level: %s", chunk_volume_level)
+                    logger.info("Partially decoded (%s): %s", self._likelihood, self._decoded_string)
 
-        decoded_string = ""
-        while not self._finalize.is_set():
-            try:
-                # TODO: Fix this
-                chunk = self.source.next_chunk(self.timeout)
-                data = np.array(struct.unpack_from('<%dh' % self.source.chunksize, chunk), dtype=np.float32)
-            except StopIteration as e:  # pylint: disable=invalid-name
-                logger.info("Stream reached it end")
-                logger.error(e)
-                self.stop()
-            except Exception as e:  # pylint: disable=invalid-name, broad-except
-                logger.error("Other exception happened: %s", e)
-                break
-            else:
-                if decoder.decode(self.source.rate, data, self._finalize.is_set()):
-                    decoded_string, likelihood = decoder.get_decoded_string()
+                for callback in self._string_partially_recognized_callbacks:
+                    callback(self._decoded_string)
 
-                    if self._debug:
-                        chunk_volume_level = volume_indicator(data)
-                        logger.info("Chunk volume level: %s", chunk_volume_level)
-                        logger.info("Partially decoded (%s): %s", likelihood, decoded_string)
+                return chunk
 
-                    for callback in self._string_partially_recognized_callbacks:
-                        callback(decoded_string)
-                else:
-                    raise RuntimeError("Decoding failed")
-
-        logger.info("Decoding of input stream is complete")
-        logger.info("Final result (%s): %s", likelihood, decoded_string)
-
-        for callback in self._string_fully_recognized_callbacks:
-            callback(decoded_string)
+            raise RuntimeError("Decoding failed")
 
     def stop(self):
         """Stop ASR process"""
         logger.info("Stop ASR")
-        self._finalize.set()
-        self.source.stop()
+
+        logger.info("Decoding of input stream is complete")
+        logger.info("Final result (%s): %s", self._likelihood, self._decoded_string)
+
+        for callback in self._string_fully_recognized_callbacks:
+            callback(self._decoded_string)
 
     def start(self):
         """Begin ASR process"""
@@ -110,7 +95,16 @@ class Asr(AsrPipelineElementBase):
 
         self._finalize.clear()
 
-        self.source.start()
+        logger.info("Trying to initialize %s model from %s", self.model_type, self.model_dir)
+        model = ONLINE_MODELS[self.model_type](self.model_dir)
+        logger.info("Successfully initialized %s model from %s", self.model_type, self.model_dir)
+
+        logger.info("Trying to initialize %s model decoder", self.model_type)
+        self.decoder = ONLINE_DECODERS[self.model_type](model)
+        logger.info("Successfully initialized %s model decoder", self.model_type)
+
+        self._decoded_string = ""
+        self._likelihood = None
 
     def register_callback(self, callback, partial=False):
         """
