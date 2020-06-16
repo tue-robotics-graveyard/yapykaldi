@@ -3,6 +3,8 @@
 Provides only a Grammar base class
 """
 
+from openfst_python import Fst
+
 
 class Grammar(object):
     """
@@ -10,12 +12,11 @@ class Grammar(object):
         tells only if a word is possible in the grammar or not
     """
 
-    def traverse(self, recognised_word):
-        # type: (str) -> bool
+    def as_finite_state_transducer(self):
+        # type: () -> Fst
         """
+        Converts the grammar to an Finite State Transducer
 
-        :param recognised_word: a word the ASR has recognized
-        :return: Can this word be part of a grammatically correct sentence?
-        :rtype: bool
+        :rtype: Fst
         """
         raise NotImplementedError()
