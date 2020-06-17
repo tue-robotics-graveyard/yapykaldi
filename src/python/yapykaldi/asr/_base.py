@@ -1,12 +1,12 @@
 """Base classes for the ASR pipeline"""
 from __future__ import print_function, division, absolute_import, unicode_literals
 from builtins import *
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 from threading import Event
 import pyaudio
 
 
-class AsrPipelineElementBase(object):
+class AsrPipelineElementBase(ABC):
     """Class AsrPipelineElementBase is the base class for all Asr Pipeline elements.
 
     It requires three abstract methods to be implemented:
@@ -26,9 +26,7 @@ class AsrPipelineElementBase(object):
     start, next_chunk, stop several times
 
     """
-    # pylint: disable=useless-object-inheritance
-
-    __metaclass__ = ABCMeta
+    # pylint: disable=too-many-instance-attributes
 
     def __init__(self, source=None, sink=None, rate=16000, chunksize=1024, fmt=pyaudio.paInt16, channels=1, timeout=1):
         self._source = None
