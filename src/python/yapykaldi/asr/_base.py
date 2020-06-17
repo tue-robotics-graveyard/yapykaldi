@@ -61,6 +61,7 @@ class AsrPipelineElementBase(ABC):
 
     def register_callback(self, callback):
         """Register a callback to the element outside the pipeline"""
+        raise NotImplementedError()
 
     def link(self, source=None, sink=None):
         """Link a source or a sink to the element
