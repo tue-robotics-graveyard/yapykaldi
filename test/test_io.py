@@ -1,17 +1,33 @@
 import logging
-from yapykaldi.io import PyAudioMicrophoneSource, WaveFileSink
+from yapykaldi.asr import PyAudioMicrophoneSource, WaveFileSink, AsrPipeline
 
 logging.basicConfig(level=logging.DEBUG,
                     format='[%(asctime)s](%(processName)-9s) %(message)s',)
 RECORD_SECONDS = 5
 
+# Define pipeline elements
 sink = WaveFileSink("dump.wav")
-source = PyAudioMicrophoneSource(saver=sink)
+source = PyAudioMicrophoneSource(sink=sink)
 
-source.start()
+# Construct pipeline
+pipeline = AsrPipeline()
+pipeline.add(source, sink)
 
-for i in range(0, int(source.rate / source.chunksize * RECORD_SECONDS)):
-    source.get_next_chunk()
+# Open pipeline
+pipeline.open()
 
-source.stop()
-source.close()
+
+# Define function to set stop condition
+def stop():
+    if pipeline._iterations == int(source.rate / source.chunksize * RECORD_SECONDS):
+        pipeline.stop()
+
+
+# Register the stop callback
+pipeline.register_callback(stop)
+
+# Start pipeline
+pipeline.start()
+
+# Clean up pipeline
+pipeline.close()

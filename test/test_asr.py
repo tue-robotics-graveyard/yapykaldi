@@ -7,8 +7,7 @@ import argparse
 import os
 import signal
 import logging
-from yapykaldi.asr import Asr
-from yapykaldi.io import PyAudioMicrophoneSource, WaveFileSource, WaveFileSink
+from yapykaldi.asr import Asr, AsrPipeline, PyAudioMicrophoneSource, WaveFileSource, WaveFileSink
 
 logging.basicConfig(level=logging.DEBUG,
                     format='[%(asctime)s](%(processName)-9s) %(message)s',)
@@ -26,17 +25,21 @@ parser.add_argument('--live', action='store_true',
 args = parser.parse_args()
 
 if args.file:
+    saver = None
     streamer = WaveFileSource(os.path.expanduser(args.file))
 elif args.live:
     saver = WaveFileSink("dump.wav")
-    streamer = PyAudioMicrophoneSource(saver=saver)
+    streamer = PyAudioMicrophoneSource()
 else:
     raise Exception("Specify either --live or --file=audio.wav")
 
-streamer.open()
-
 # Remove the debug arg to reduce verbosity
-asr = Asr(model_dir, model_type, streamer, debug=True)
+asr = Asr(model_dir, model_type, debug=True, source=streamer, sink=saver)
+
+pipeline = AsrPipeline()
+pipeline.add(asr, streamer)
+if saver:
+    pipeline.add(saver)
 
 
 def output_str(string):
@@ -50,7 +53,7 @@ def got_complete_str(string):
 
 def interrupt_handle(sig, frame):
     """Interrupt handler that sets the flag to stop recognition and close audio stream"""
-    asr.stop()
+    pipeline.stop()
 
 
 asr.register_callback(output_str, partial=True)
@@ -59,7 +62,7 @@ asr.register_callback(got_complete_str)
 # Handle interrupt
 signal.signal(signal.SIGINT, interrupt_handle)
 
-asr.start()
-asr.recognize()
+pipeline.open()
+pipeline.start()
 
-streamer.close()
+pipeline.close()
